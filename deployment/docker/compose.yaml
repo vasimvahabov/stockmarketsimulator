@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:18.1
+    pull_policy: missing
+    container_name: postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: 'usr_admin'
+      POSTGRES_PASSWORD: 'pwd_admin'
+      POSTGRES_DB: 'postgres'
+    volumes:
+      - pg-data:/var/lib/postgresql
+    networks:
+      - stock-market-simulator
+
+volumes:
+  pg-data:
+    name: stock-market-simulator
+
+networks:
+  stock-market-simulator:
+    name: stock-market-simulator
+    driver: bridge
