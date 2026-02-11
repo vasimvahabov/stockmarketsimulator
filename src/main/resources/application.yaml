@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: stockmarketsimulator
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: ""
+    password: ""
+  liquibase:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+finnhub:
+  base-url: 'https://finnhub.io/api/'
+  api-key: ${FINNHUB_API_KEY}
+  api-version: 'v1'
