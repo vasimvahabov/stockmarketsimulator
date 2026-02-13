@@ -1,15 +1,8 @@
 spring:
   application:
     name: stockmarketsimulator
-  datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
-    username: ""
-    password: ""
-  liquibase:
-    enabled: false
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
+  profiles:
+    active: ${ACTIVE_PROFILE:local}
 
 finnhub:
   base-url: 'https://finnhub.io/api/'
