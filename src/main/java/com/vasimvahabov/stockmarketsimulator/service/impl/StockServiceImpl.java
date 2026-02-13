@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -28,15 +29,21 @@ public class StockServiceImpl implements StockService {
     StockRepository stockRepository;
 
     @Override
-    public void fetchStocksByCurrency(Currency currency) {
+    public void fetchStocksByCurrency(@NonNull Currency currency) {
+        var currencySymbol = currency.getSymbol();
+        var adjustedCurrencyCode = currencySymbol.substring(0, currencySymbol.length() - 1);
+        var uri = String.format("/stock/symbol?exchange=%s", adjustedCurrencyCode);
+
         var stocks = restClient.get()
-                .uri("/stock/symbol?exchange=US")
-                .exchange((request, response)-> {
-                    if(!response.getStatusCode().isError()) {
-                        return response.bodyTo(new ParameterizedTypeReference<List<StockResponse>>() {});
+                .uri(uri)
+                .exchange((request, response) -> {
+                    if (!response.getStatusCode().isError()) {
+                        return response.bodyTo(new ParameterizedTypeReference<List<StockResponse>>() {
+                        });
                     }
-                    throw new RestClientException("Exception occured: %s".formatted(response.getStatusText()));
-                }).stream().map(stockMapper::responseToEntity).toList();
+                    throw new RestClientException("Exception occurred: %s".formatted(response.getStatusText()));
+                }).stream()
+                .map(stockMapper::responseToEntity).toList();
 
         stockRepository.saveAll(stocks);
     }
