@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import com.vasimvahabov.stockmarketsimulator.repository.StockRepository;
-
 import java.util.Currency;
 import java.util.List;
 
@@ -29,12 +28,17 @@ public class StockServiceImpl implements StockService {
     StockRepository stockRepository;
 
     @Override
-    public void fetchStocksByCurrency(@NonNull Currency currency) {
+    public void persistStocksByCurrency(Currency currency) {
+        stockRepository.saveAll(fetchStocksByCurrency(currency).stream()
+                .map(stockMapper::responseToEntity).toList());
+    }
+
+    private List<StockResponse> fetchStocksByCurrency(@NonNull Currency currency) {
         var currencySymbol = currency.getSymbol();
         var adjustedCurrencyCode = currencySymbol.substring(0, currencySymbol.length() - 1);
         var uri = String.format("/stock/symbol?exchange=%s", adjustedCurrencyCode);
 
-        var stocks = restClient.get()
+        return restClient.get()
                 .uri(uri)
                 .exchange((request, response) -> {
                     if (!response.getStatusCode().isError()) {
@@ -42,11 +46,7 @@ public class StockServiceImpl implements StockService {
                         });
                     }
                     throw new RestClientException("Exception occurred: %s".formatted(response.getStatusText()));
-                }).stream()
-                .map(stockMapper::responseToEntity).toList();
-
-        stockRepository.saveAll(stocks);
+                });
     }
-
 
 }

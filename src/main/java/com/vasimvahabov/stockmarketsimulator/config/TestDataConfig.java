@@ -8,7 +8,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-
 import java.util.Currency;
 import java.util.Locale;
 
@@ -22,7 +21,7 @@ public class TestDataConfig {
     @Bean
     @Profile("local")
     public CommandLineRunner fetchStock() {
-        return args -> stockService.fetchStocksByCurrency(Currency.getInstance(Locale.US));
+        return args -> { stockService.persistStocksByCurrency(Currency.getInstance(Locale.US)); };
     }
 
 }

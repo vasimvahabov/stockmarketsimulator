@@ -12,8 +12,9 @@ public record StockResponse(
 
         String mic,
 
-        String symbol
+        String symbol,
 
+        String type
 ) {
 }
 
