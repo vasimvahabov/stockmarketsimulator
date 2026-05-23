@@ -17,4 +17,3 @@ public record StockResponse(
         String type
 ) {
 }
-

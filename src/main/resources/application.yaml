@@ -5,8 +5,14 @@ spring:
     active: ${ACTIVE_PROFILE:local}
 #  main.allow-bean-definition-overriding: true
 
-
 finnhub:
   base-url: 'https://finnhub.io/api/'
   api-key: ${FINNHUB_API_KEY}
   api-version: 'v1'
+
+executor:
+  stock:
+    initial-delay-sec: ${INITIAL_DELAY_MIN_STOCK_SCHEDULER:60}
+    period-sec: ${PERIOD_MIN_STOCK_SCHEDULER:60}
+    time-unit: ${TIME_UNIT_STOCK_SCHEDULER:SECONDS}
+    currency-code: ${CURRENCY_CODE_STOCK_SCHEDULER:USD}
