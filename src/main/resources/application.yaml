@@ -15,4 +15,3 @@ executor:
     initial-delay-sec: ${INITIAL_DELAY_MIN_STOCK_SCHEDULER:60}
     period-sec: ${PERIOD_MIN_STOCK_SCHEDULER:60}
     time-unit: ${TIME_UNIT_STOCK_SCHEDULER:SECONDS}
-    currency-code: ${CURRENCY_CODE_STOCK_SCHEDULER:USD}

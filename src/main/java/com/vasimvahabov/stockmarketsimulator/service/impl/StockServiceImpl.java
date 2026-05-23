@@ -1,21 +1,26 @@
 package com.vasimvahabov.stockmarketsimulator.service.impl;
 
+import com.vasimvahabov.stockmarketsimulator.constant.Exchange;
 import com.vasimvahabov.stockmarketsimulator.dto.response.StockResponse;
+import com.vasimvahabov.stockmarketsimulator.entity.Stock;
 import com.vasimvahabov.stockmarketsimulator.mapper.StockMapper;
 import com.vasimvahabov.stockmarketsimulator.service.StockService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import com.vasimvahabov.stockmarketsimulator.repository.StockRepository;
 
-import java.util.Currency;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -28,19 +33,35 @@ public class StockServiceImpl implements StockService {
     StockRepository stockRepository;
 
     @Override
-    public void synchronizeStocksByCurrency(Currency currency) {
-        log.info("Synchronizing stocks for currency {}", currency.getCurrencyCode());
-        stockRepository.saveAll(fetchStocksByCurrency(currency).stream()
-                .map(stockMapper::responseToEntity).toList());
-        log.info("Stocks for currency {} synchronized", currency.getCurrencyCode());
+    @Transactional
+    public void synchronizeByExchange(Exchange exchange) {
+        log.info("Synchronizing stocks for exchange {}", exchange);
+        Map<String, Stock> stocksBySymbol = stockRepository
+                .findByExchange(exchange)
+                .stream()
+                .collect(Collectors.toMap(
+                        Stock::getSymbol,
+                        Function.identity()
+                ));
 
+        List<Stock> stocksToSave = fetchByExchange(exchange)
+                .stream()
+                .map(response ->
+                        Optional.ofNullable(stocksBySymbol.get(response.symbol()))
+                                .map(stock -> stockMapper.responseToEntity(stock, response))
+                                .orElse(stockMapper.responseToEntity(response, exchange))
+                )
+                .toList();
+        if (!stocksToSave.isEmpty()) {
+            stockRepository.saveAll(stocksToSave);
+            log.info("Persisted {} stocks for exchange {}", stocksToSave.size(), exchange);
+        }
+        log.info("Stocks for exchange {} synchronized", exchange.getCode());
     }
 
-    private List<StockResponse> fetchStocksByCurrency(@NonNull Currency currency) {
-        var currencySymbol = currency.getCurrencyCode();
-        var currencyCode = currencySymbol.substring(0, currencySymbol.length() - 1);
-        var uri = String.format("/stock/symbol?exchange=%s", currencyCode);
-        log.info("Fetching stocks for currency {} with uri {}", currencyCode, uri);
+    private List<StockResponse> fetchByExchange(Exchange exchange) {
+        var uri = String.format("/stock/symbol?exchange=%s", exchange.getCode());
+        log.info("Fetching stocks for exchange {} with uri {}", exchange.getCode(), uri);
 
         var stocks = restClient.get()
                 .uri(uri)
@@ -52,7 +73,7 @@ public class StockServiceImpl implements StockService {
                     throw new RestClientException("Exception occurred: %s".formatted(response.getStatusText()));
                 });
 
-        log.info("Fetched {} stocks for currency {} with uri {}", stocks.size(), currencyCode, uri);
+        log.info("Fetched {} stocks for currency {} with uri {}", stocks.size(), exchange.getCode(), uri);
         return stocks;
     }
 

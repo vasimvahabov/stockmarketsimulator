@@ -1,9 +1,11 @@
 package com.vasimvahabov.stockmarketsimulator.entity;
 
-import java.util.List;
+import com.vasimvahabov.stockmarketsimulator.constant.Exchange;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @Setter
 @Getter
@@ -23,8 +25,8 @@ public class Stock {
     @Column(name = "figi")
     String figi;
 
-    @Column(name = "currency")
-    String currency;
+    @Column(name = "exchange")
+    Exchange exchange;
 
     @Column(name = "description")
     String description;

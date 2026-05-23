@@ -1,5 +1,6 @@
 package com.vasimvahabov.stockmarketsimulator.scheduler;
 
+import com.vasimvahabov.stockmarketsimulator.constant.Exchange;
 import com.vasimvahabov.stockmarketsimulator.scheduler.config.StockSynchronizerConfig;
 import com.vasimvahabov.stockmarketsimulator.service.StockService;
 import lombok.AccessLevel;
@@ -11,8 +12,9 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.util.Currency;
 import java.util.concurrent.ScheduledExecutorService;
+
+import static com.vasimvahabov.stockmarketsimulator.constant.Exchange.*;
 
 @Slf4j
 @Component
@@ -25,21 +27,22 @@ public class StockSynchronizer implements ApplicationRunner {
     StockSynchronizerConfig synchronizerConfig;
     ScheduledExecutorService executorService;
 
+    Exchange EXCHANGE = US;
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        Currency currency = Currency.getInstance(synchronizerConfig.getCurrencyCode());
         executorService.scheduleAtFixedRate(
-                () -> stockService.synchronizeStocksByCurrency(currency),
+                () -> stockService.synchronizeByExchange(EXCHANGE),
                 synchronizerConfig.getInitialDelaySec(),
                 synchronizerConfig.getPeriodSec(),
                 synchronizerConfig.getTimeUnit()
         );
         log.info(
-                "Stock sync executor started [delay={}s, period={}s, timeunit={}, currency={}]",
+                "Stock sync executor started [delay={}s, period={}s, timeunit={}, exchange={}]",
                 synchronizerConfig.getInitialDelaySec(),
                 synchronizerConfig.getPeriodSec(),
                 synchronizerConfig.getTimeUnit(),
-                synchronizerConfig.getCurrencyCode()
+                EXCHANGE
         );
     }
 }

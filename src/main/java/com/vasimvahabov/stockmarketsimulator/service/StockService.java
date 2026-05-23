@@ -1,9 +1,9 @@
 package com.vasimvahabov.stockmarketsimulator.service;
 
-import java.util.Currency;
+import com.vasimvahabov.stockmarketsimulator.constant.Exchange;
 
 public interface StockService {
 
-    void synchronizeStocksByCurrency(Currency currency);
+    void synchronizeByExchange(Exchange exchange);
 
 }
