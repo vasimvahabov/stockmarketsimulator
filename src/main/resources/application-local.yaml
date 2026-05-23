@@ -3,8 +3,16 @@ spring:
     url: jdbc:postgresql://localhost:5432/postgres
     username: ${POSTGRES_USR}
     password: ${POSTGRES_PWD}
+
   liquibase:
     enabled: false
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
+
+#  output:
+#    ansi:
+#      enabled: always
+
+  # main:
+    # log-startup-info: false

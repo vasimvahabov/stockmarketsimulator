@@ -3,6 +3,8 @@ spring:
     name: stockmarketsimulator
   profiles:
     active: ${ACTIVE_PROFILE:local}
+#  main.allow-bean-definition-overriding: true
+
 
 finnhub:
   base-url: 'https://finnhub.io/api/'
