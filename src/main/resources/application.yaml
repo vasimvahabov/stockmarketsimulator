@@ -12,6 +12,6 @@ finnhub:
 
 executor:
   stock:
-    initial-delay-sec: ${INITIAL_DELAY_MIN_STOCK_SCHEDULER:60}
-    period-sec: ${PERIOD_MIN_STOCK_SCHEDULER:60}
-    time-unit: ${TIME_UNIT_STOCK_SCHEDULER:SECONDS}
+#    initial-delay: ${INITIAL_DELAY_STOCK_EXECUTOR:60}
+    period: ${PERIOD_STOCK_STOCK_EXECUTOR:86400000}
+    time-unit: ${TIME_UNIT_STOCK_EXECUTOR:MILLISECONDS}

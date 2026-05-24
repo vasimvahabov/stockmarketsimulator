@@ -1,5 +1,6 @@
 package com.vasimvahabov.stockmarketsimulator.scheduler;
 
+import com.vasimvahabov.stockmarketsimulator.util.DateTimeUtils;
 import com.vasimvahabov.stockmarketsimulator.constant.Exchange;
 import com.vasimvahabov.stockmarketsimulator.scheduler.config.StockSynchronizerConfig;
 import com.vasimvahabov.stockmarketsimulator.service.StockService;
@@ -31,18 +32,20 @@ public class StockSynchronizer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        final long initialDelayMillis = DateTimeUtils.millisUntilMidnightUTC();
         executorService.scheduleAtFixedRate(
                 () -> stockService.synchronizeByExchange(EXCHANGE),
-                synchronizerConfig.getInitialDelaySec(),
-                synchronizerConfig.getPeriodSec(),
+                initialDelayMillis,
+                synchronizerConfig.getPeriod(),
                 synchronizerConfig.getTimeUnit()
         );
         log.info(
-                "Stock sync executor started [delay={}s, period={}s, timeunit={}, exchange={}]",
-                synchronizerConfig.getInitialDelaySec(),
-                synchronizerConfig.getPeriodSec(),
+                "Stock sync executor started [delay={}ms, period={}ms, timeunit={}, exchange={}]",
+                initialDelayMillis,
+                synchronizerConfig.getPeriod(),
                 synchronizerConfig.getTimeUnit(),
                 EXCHANGE
         );
     }
+
 }
