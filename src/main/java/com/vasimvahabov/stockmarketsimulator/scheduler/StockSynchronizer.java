@@ -32,7 +32,8 @@ public class StockSynchronizer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        final long initialDelayMillis = DateTimeUtils.millisUntilMidnightUTC();
+        final long initialDelayMillis = synchronizerConfig.getInitialDelay() != null ?
+                synchronizerConfig.getInitialDelay() : DateTimeUtils.millisUntilMidnightUTC();
         executorService.scheduleAtFixedRate(
                 () -> stockService.synchronizeByExchange(EXCHANGE),
                 initialDelayMillis,

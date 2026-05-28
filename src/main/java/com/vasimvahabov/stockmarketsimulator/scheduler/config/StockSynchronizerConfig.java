@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 @ConfigurationProperties("executor.stock")
 public class StockSynchronizerConfig {
 
-//    Long initialDelay;
+    Long initialDelay;
 
     Long period;
 
