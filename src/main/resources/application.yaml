@@ -6,12 +6,12 @@ spring:
 #  main.allow-bean-definition-overriding: true
 
 finnhub:
-  base-url: 'https://finnhub.io/api/'
+  base-url: ${FINNHUB_BASE_URL:"https://finnhub.io/api/"}
+  auth-header: ${FINNHUB_AUTH_HEADER:"X-Finnhub-Token"}
+  api-version: ${FINNHUB_API_VERSION:"v1"}
   api-key: ${FINNHUB_API_KEY}
-  api-version: 'v1'
 
 executor:
   stock:
-#    initial-delay: ${INITIAL_DELAY_STOCK_EXECUTOR:60}
     period: ${PERIOD_STOCK_STOCK_EXECUTOR:86400000}
     time-unit: ${TIME_UNIT_STOCK_EXECUTOR:MILLISECONDS}

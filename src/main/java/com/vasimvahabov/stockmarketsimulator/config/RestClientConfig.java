@@ -33,7 +33,7 @@ public class RestClientConfig {
                 .apiVersionInserter(ApiVersionInserter.usePathSegment(1))
                 .defaultApiVersion(finnhubConfig.getApiVersion())
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .defaultHeader("X-Finnhub-Token", finnhubConfig.getApiKey())
+                .defaultHeader(finnhubConfig.getAuthHeader(), finnhubConfig.getApiKey())
                 .build();
     }
 

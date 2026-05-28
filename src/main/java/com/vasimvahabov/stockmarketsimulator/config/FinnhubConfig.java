@@ -24,5 +24,9 @@ public class FinnhubConfig {
     @NotBlank
     String apiKey;
 
+    @NotBlank
+    String authHeader;
+
+
 }
 
