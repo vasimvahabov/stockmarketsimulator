@@ -2,7 +2,7 @@ spring:
   application:
     name: stockmarketsimulator
   profiles:
-    active: ${ACTIVE_PROFILE:local}
+    active: "${ACTIVE_PROFILE:local}"
 #  main.allow-bean-definition-overriding: true
 
 finnhub:
@@ -13,5 +13,6 @@ finnhub:
 
 executor:
   stock:
-    period: ${PERIOD_STOCK_STOCK_EXECUTOR:86400000}
-    time-unit: ${TIME_UNIT_STOCK_EXECUTOR:MILLISECONDS}
+    thread-pool-size: "${QUOTE_EXECUTOR_REST_THREAD_POOL_SIZE:1}"
+    period: "${STOCK_EXECUTOR_REST_PERIOD:86400000}"
+    time-unit: "${STOCK_EXECUTOR_REST_TIME_UNIT:MILLISECONDS}"
