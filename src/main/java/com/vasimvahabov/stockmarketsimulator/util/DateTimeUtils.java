@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.concurrent.TimeUnit;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DateTimeUtils {
@@ -17,6 +18,10 @@ public class DateTimeUtils {
             midnight = midnight.plusDays(1);
         }
         return Duration.between(now, midnight).toMillis();
+    }
+
+    public static long toMillis(long duration, TimeUnit timeUnit) {
+        return TimeUnit.MILLISECONDS.convert(duration, timeUnit);
     }
 
 }
