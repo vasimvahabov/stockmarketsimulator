@@ -1,0 +1,32 @@
+name: 'Build Stock Market Simulator Application'
+on:
+  push:
+    branches:
+      - 'dev'
+
+env:
+  MVN_SKIP_TESTS: 'true'
+
+jobs:
+  build:
+    name: 'Build Application on JDK ${{ matrix.jdk-version }}'
+    runs-on: 'ubuntu-22.04'
+    permissions:
+      contents: 'read'
+      security-events: 'write'
+    strategy:
+      matrix:
+        jdk-version: ['25']
+        jdk-dist: ['temurin']
+        jdk-build-tool: ['maven']
+    steps:
+      - name: 'Checkout ${{ github.ref }} ( ${{ github.sha }} )'
+        uses: actions/checkout@v6
+      - name: 'Setup ${{ matrix.jdk-version }} ${{ matrix.jdk-dist }}'
+        uses: actions/setup-java@v5
+        with:
+          java-version: '${{ matrix.jdk-version }}'
+          distribution: '${{ matrix.jdk-dist }}'
+          cache: '${{ matrix.jdk-build-tool }}'
+      - name: 'Build Stock Market Simulator Application via ${{ matrix.jdk-build-tool }}'
+        run: 'mvn clean package -Dmaven.test.skip=${{ env.MVN_SKIP_TESTS }}'
