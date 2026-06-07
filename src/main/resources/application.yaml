@@ -6,13 +6,29 @@ spring:
 #  main.allow-bean-definition-overriding: true
 
 finnhub:
-  base-url: ${FINNHUB_BASE_URL:"https://finnhub.io/api/"}
-  auth-header: ${FINNHUB_AUTH_HEADER:"X-Finnhub-Token"}
-  api-version: ${FINNHUB_API_VERSION:"v1"}
-  api-key: ${FINNHUB_API_KEY}
+  api-key: "${FINNHUB_API_KEY}"
+  rest:
+    base-url: "${FINNHUB_REST_BASE_URL:https://finnhub.io/api/}"
+    auth-header: "${FINNHUB_REST_AUTH_HEADER:X-Finnhub-Token}"
+    api-version: "${FINNHUB_REST_API_VERSION:v1}"
+  websocket:
+    uri: "${FINNHUB_WS_URI:wss://ws.finnhub.io}"
+    auth-query-param: "${FINNHUB_WS_AUTH_PARAM:token}"
+    timeout: "${FINNHUB_WS_TIMEOUT:2}"
+    timeout-unit: "${FINNHUB_WS_TIMEOUT_UNIT:SECONDS}"
 
 executor:
   stock:
-    thread-pool-size: "${QUOTE_EXECUTOR_REST_THREAD_POOL_SIZE:1}"
+    thread-pool-size: "${STOCK_EXECUTOR_REST_THREAD_POOL_SIZE:1}"
     period: "${STOCK_EXECUTOR_REST_PERIOD:86400000}"
-    time-unit: "${STOCK_EXECUTOR_REST_TIME_UNIT:MILLISECONDS}"
+    unit: "${STOCK_EXECUTOR_REST_UNIT:MILLISECONDS}"
+  quote:
+    websocket:
+      thread-pool-size: "${QUOTE_EXECUTOR_WS_THREAD_POOL_SIZE:2}"
+      session-duration: "${QUOTE_EXECUTOR_WS_SESSION_DURATION:45}"
+      session-duration-unit: "${QUOTE_EXECUTOR_WS_SESSION_DURATION_UNIT:SECONDS}"
+      close-grace-period: "${QUOTE_EXECUTOR_WS_CLOSE_GRACE_PERIOD:10}"
+      close-grace-period-unit: "${QUOTE_EXECUTOR_WS_CLOSE_GRACE_UNIT:SECONDS}"
+      batch-size: "${QUOTE_EXECUTOR_WS_BATCH_SIZE:30}"
+      batch-delay: "${QUOTE_EXECUTOR_WS_BATCH_DELAY:60}"
+      batch-delay-unit: "${QUOTE_EXECUTOR_WS_DELAY_BATCH_UNIT:SECONDS}"

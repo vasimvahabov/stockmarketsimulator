@@ -2,12 +2,13 @@ package com.vasimvahabov.stockmarketsimulator.scheduler;
 
 import com.vasimvahabov.stockmarketsimulator.util.DateTimeUtils;
 import com.vasimvahabov.stockmarketsimulator.constant.Exchange;
-import com.vasimvahabov.stockmarketsimulator.scheduler.config.StockSynchronizerConfig;
+import com.vasimvahabov.stockmarketsimulator.scheduler.properties.StockSynchronizerProps;
 import com.vasimvahabov.stockmarketsimulator.service.StockService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
@@ -25,26 +26,28 @@ import static com.vasimvahabov.stockmarketsimulator.constant.Exchange.*;
 public class StockSynchronizer implements ApplicationRunner {
 
     StockService stockService;
-    StockSynchronizerConfig synchronizerConfig;
-    ScheduledExecutorService executorService;
+    StockSynchronizerProps synchronizerProps;
+
+    @Qualifier("stockScheduledExecutor")
+    ScheduledExecutorService scheduledExecutor;
 
     Exchange EXCHANGE = US;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        final long initialDelayMillis = synchronizerConfig.getInitialDelay() != null ?
-                synchronizerConfig.getInitialDelay() : DateTimeUtils.millisUntilMidnightUTC();
-        executorService.scheduleAtFixedRate(
+        final long initialDelayMillis = synchronizerProps.getInitialDelay() != null ?
+                synchronizerProps.getInitialDelay() : DateTimeUtils.millisUntilMidnightUTC();
+        scheduledExecutor.scheduleAtFixedRate(
                 () -> stockService.synchronizeByExchange(EXCHANGE),
                 initialDelayMillis,
-                synchronizerConfig.getPeriod(),
-                synchronizerConfig.getTimeUnit()
+                synchronizerProps.getPeriod(),
+                synchronizerProps.getUnit()
         );
         log.info(
                 "Stock sync executor started [delay={}ms, period={}ms, timeunit={}, exchange={}]",
                 initialDelayMillis,
-                synchronizerConfig.getPeriod(),
-                synchronizerConfig.getTimeUnit(),
+                synchronizerProps.getPeriod(),
+                synchronizerProps.getUnit(),
                 EXCHANGE
         );
     }

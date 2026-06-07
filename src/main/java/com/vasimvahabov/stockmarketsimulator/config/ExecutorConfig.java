@@ -1,6 +1,7 @@
 package com.vasimvahabov.stockmarketsimulator.config;
 
 import com.vasimvahabov.stockmarketsimulator.constant.ExecutorThread;
+import com.vasimvahabov.stockmarketsimulator.scheduler.properties.QuoteSynchronizerProps;
 import com.vasimvahabov.stockmarketsimulator.scheduler.properties.StockSynchronizerProps;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +20,21 @@ public class ExecutorConfig {
 
     StockSynchronizerProps stockSyncProps;
 
+    QuoteSynchronizerProps quoteSyncProps;
+
     @Bean(name = "stockScheduledExecutor", destroyMethod = "close")
     public ScheduledExecutorService stockScheduledExecutor() {
         return new ScheduledThreadPoolExecutor(
                 stockSyncProps.getThreadPoolSize(),
                 r -> new Thread(r, ExecutorThread.STOCK_SYNC.getThread())
+        );
+    }
+
+    @Bean(name = "quoteScheduledExecutor")
+    public ScheduledExecutorService quoteScheduledExecutor() {
+        return new ScheduledThreadPoolExecutor(
+                quoteSyncProps.getWebSocket().threadPoolSize(),
+                r -> new Thread(r, ExecutorThread.QUOTE_SYNC.getThread())
         );
     }
 

@@ -5,6 +5,10 @@ import com.vasimvahabov.stockmarketsimulator.dto.response.StockResponse;
 import com.vasimvahabov.stockmarketsimulator.entity.Stock;
 import com.vasimvahabov.stockmarketsimulator.mapper.StockMapper;
 import com.vasimvahabov.stockmarketsimulator.service.StockService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -29,8 +33,12 @@ import java.util.stream.Collectors;
 public class StockServiceImpl implements StockService {
 
     RestClient restClient;
+
     StockMapper stockMapper;
+
     StockRepository stockRepository;
+
+    EntityManager entityManager;
 
     @Override
     @Transactional
@@ -57,6 +65,18 @@ public class StockServiceImpl implements StockService {
             log.info("Persisted {} stocks for exchange {}", stocksToSave.size(), exchange);
         }
         log.info("Stocks for exchange {} synchronized", exchange.getCode());
+    }
+
+    @Override
+    public Map<String, Stock> fetchAllStocksAsMap() {
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Stock> query = builder.createQuery(Stock.class);
+        Root<Stock> root = query.from(Stock.class);
+        query.select(root);
+        return entityManager.createQuery(query)
+                .getResultList()
+                .stream()
+                .collect(Collectors.toMap(Stock::getSymbol, Function.identity()));
     }
 
     private List<StockResponse> fetchByExchange(Exchange exchange) {

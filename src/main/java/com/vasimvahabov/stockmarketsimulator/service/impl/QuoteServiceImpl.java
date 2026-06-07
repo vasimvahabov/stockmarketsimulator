@@ -1,8 +1,13 @@
 package com.vasimvahabov.stockmarketsimulator.service.impl;
 
 import com.vasimvahabov.stockmarketsimulator.dto.response.QuoteResponse;
-import com.vasimvahabov.stockmarketsimulator.service.CandleService;
+import com.vasimvahabov.stockmarketsimulator.dto.response.QuoteWSResponse;
+import com.vasimvahabov.stockmarketsimulator.entity.Quote;
+import com.vasimvahabov.stockmarketsimulator.entity.Stock;
+import com.vasimvahabov.stockmarketsimulator.mapper.QuoteMapper;
+import com.vasimvahabov.stockmarketsimulator.repository.QuoteRepository;
 import com.vasimvahabov.stockmarketsimulator.service.QuoteService;
+import jakarta.annotation.Nonnull;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -12,6 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+import java.util.List;
+import java.util.Map;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -19,23 +27,32 @@ import org.springframework.web.client.RestClientException;
 public class QuoteServiceImpl implements QuoteService {
 
     RestClient restClient;
-    CandleService candleService;
+    QuoteRepository quoteRepository;
+    QuoteMapper quoteMapper;
 
-    @Override
-    public QuoteResponse fetchQuoteBySymbol(@NonNull String symbol) {
+    public void create(@NonNull List<QuoteWSResponse> wsResponses, @NonNull Map<String, Stock> stocksMap) {
+        List<Quote> savedQuotes = quoteRepository.saveAll(
+                wsResponses.stream()
+                        .map(response -> quoteMapper.wsResponseToEntity(response, stocksMap))
+                        .toList()
+        );
+
+        log.info("Successfully created {} quotes", savedQuotes.size());
+    }
+
+
+    private QuoteResponse fetchQuoteBySymbol(@Nonnull String symbol) {
         var uri = String.format("/quote?symbol=%s", symbol);
-
-        var quote = restClient.get()
+        return restClient.get()
                 .uri(uri)
                 .exchange((_, response) -> {
-                    if(!response.getStatusCode().isError()) {
+                    if (!response.getStatusCode().isError()) {
                         return response.bodyTo(QuoteResponse.class);
                     }
                     throw new RestClientException("Exception occurred: %s".formatted(response.getStatusText()));
                 });
-        candleService.create(quote);
-        return null;
     }
+
 }
 
 

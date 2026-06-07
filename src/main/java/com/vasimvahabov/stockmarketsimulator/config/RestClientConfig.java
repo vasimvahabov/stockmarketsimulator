@@ -1,6 +1,7 @@
 package com.vasimvahabov.stockmarketsimulator.config;
 
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;
@@ -12,12 +13,13 @@ import org.springframework.web.client.ApiVersionInserter;
 import org.springframework.web.client.RestClient;
 import java.net.http.HttpClient;
 
+@Getter
 @Configuration
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RestClientConfig {
 
-    FinnhubConfig finnhubConfig;
+    FinnhubProps finnhubProps;
 
     @Bean
     RestClient finnhubClient() {
@@ -26,14 +28,15 @@ public class RestClientConfig {
                 .build();
 
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+        FinnhubProps.Rest restProps = finnhubProps.getRest();
 
         return RestClient.builder()
                 .requestFactory(requestFactory)
-                .baseUrl(finnhubConfig.getBaseUrl())
+                .baseUrl(restProps.baseUrl())
                 .apiVersionInserter(ApiVersionInserter.usePathSegment(1))
-                .defaultApiVersion(finnhubConfig.getApiVersion())
+                .defaultApiVersion(restProps.apiVersion())
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .defaultHeader(finnhubConfig.getAuthHeader(), finnhubConfig.getApiKey())
+                .defaultHeader(restProps.authHeader(), finnhubProps.getApiKey())
                 .build();
     }
 

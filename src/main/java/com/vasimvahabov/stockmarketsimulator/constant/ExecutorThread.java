@@ -10,8 +10,10 @@ import lombok.experimental.FieldDefaults;
 @RequiredArgsConstructor
 public enum ExecutorThread {
 
-    STOCK_SYNC("stock-sync-thread");
+    STOCK_SYNC("stock-sync-thread"),
 
-    String thread;
+    QUOTE_SYNC("quote-sync-thread");
+
+    final String thread;
 
 }

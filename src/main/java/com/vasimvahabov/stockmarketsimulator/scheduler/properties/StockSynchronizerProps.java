@@ -1,25 +1,24 @@
-package com.vasimvahabov.stockmarketsimulator.scheduler.config;
+package com.vasimvahabov.stockmarketsimulator.scheduler.properties;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.concurrent.TimeUnit;
 
 @Getter
-@Setter
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @ConfigurationProperties("executor.stock")
-public class StockSynchronizerConfig {
+public class StockSynchronizerProps {
 
     Long initialDelay;
 
     Long period;
 
-    TimeUnit timeUnit;
+    TimeUnit unit;
+
+    int threadPoolSize;
+
 
 }
