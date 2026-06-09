@@ -3,12 +3,13 @@ package com.vasimvahabov.stockmarketsimulator.dto.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public record QuoteWSResponse(
 
         String type,
 
-        Data data
+        List<Data> data
 
 ) {
 
@@ -20,7 +21,9 @@ public record QuoteWSResponse(
 
             @JsonProperty("t") long timeStampMs,
 
-            @JsonProperty("v") float volume
+            @JsonProperty("v") float volume,
+
+            @JsonProperty("c") List<String> conditions
 
     ) {
 

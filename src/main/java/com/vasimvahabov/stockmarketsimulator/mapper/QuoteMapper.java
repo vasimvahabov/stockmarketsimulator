@@ -12,19 +12,19 @@ import java.util.Map;
 public interface QuoteMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "lastPrice", source = "wsResponse.data.lastPrice")
-    @Mapping(target = "volume", source = "wsResponse.data.volume")
+    @Mapping(target = "lastPrice", source = "data.lastPrice")
+    @Mapping(target = "volume", source = "data.volume")
     @Mapping(
             target = "timeStampMs",
-            source = "wsResponse.data.timeStampMs",
+            source = "data.timeStampMs",
             qualifiedByName = "millisToInstant"
     )
     @Mapping(
             target = "stock",
-            source = "wsResponse.data.symbol",
+            source = "data.symbol",
             qualifiedByName = "stockBySymbol"
     )
-    Quote wsResponseToEntity(QuoteWSResponse wsResponse, @Context Map<String, Stock> stocksMap);
+    Quote wsResponseToEntity(QuoteWSResponse.Data data, @Context Map<String, Stock> stocksMap);
 
     @Named("stockBySymbol")
     default Stock stockBySymbol(String symbol, @Context Map<String, Stock> stocksMap) {

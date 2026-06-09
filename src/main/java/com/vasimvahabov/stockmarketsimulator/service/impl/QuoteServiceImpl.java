@@ -33,7 +33,8 @@ public class QuoteServiceImpl implements QuoteService {
     public void create(@NonNull List<QuoteWSResponse> wsResponses, @NonNull Map<String, Stock> stocksMap) {
         List<Quote> savedQuotes = quoteRepository.saveAll(
                 wsResponses.stream()
-                        .map(response -> quoteMapper.wsResponseToEntity(response, stocksMap))
+                        .flatMap(response -> response.data().stream())
+                        .map(data -> quoteMapper.wsResponseToEntity(data, stocksMap))
                         .toList()
         );
 
