@@ -17,8 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -31,13 +30,15 @@ public class QuoteServiceImpl implements QuoteService {
     QuoteMapper quoteMapper;
 
     public void create(@NonNull List<QuoteWSResponse> wsResponses, @NonNull Map<String, Stock> stocksMap) {
-        List<Quote> savedQuotes = quoteRepository.saveAll(
-                wsResponses.stream()
-                        .flatMap(response -> response.data().stream())
-                        .map(data -> quoteMapper.wsResponseToEntity(data, stocksMap))
-                        .toList()
-        );
+        List<Quote> quotesToCreate = wsResponses
+                .stream()
+                .flatMap(wsResponse -> Optional.ofNullable(wsResponse.data())
+                                .orElseGet(Collections::emptyList).stream())
+                .map(data -> quoteMapper.wsResponseToEntity(data, stocksMap))
+                .toList();
 
+        log.info("Creating {} quotes", quotesToCreate.size());
+        List<Quote> savedQuotes = quoteRepository.saveAll(quotesToCreate);
         log.info("Successfully created {} quotes", savedQuotes.size());
     }
 
