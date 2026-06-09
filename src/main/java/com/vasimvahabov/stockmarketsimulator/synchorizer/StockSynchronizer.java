@@ -1,8 +1,8 @@
-package com.vasimvahabov.stockmarketsimulator.scheduler;
+package com.vasimvahabov.stockmarketsimulator.synchorizer;
 
 import com.vasimvahabov.stockmarketsimulator.util.DateTimeUtils;
 import com.vasimvahabov.stockmarketsimulator.constant.Exchange;
-import com.vasimvahabov.stockmarketsimulator.scheduler.properties.StockSynchronizerProps;
+import com.vasimvahabov.stockmarketsimulator.synchorizer.properties.StockSynchronizerProps;
 import com.vasimvahabov.stockmarketsimulator.service.StockService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

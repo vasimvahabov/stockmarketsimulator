@@ -1,4 +1,4 @@
-package com.vasimvahabov.stockmarketsimulator.scheduler.properties;
+package com.vasimvahabov.stockmarketsimulator.synchorizer.properties;
 
 import com.vasimvahabov.stockmarketsimulator.util.DateTimeUtils;
 import lombok.*;

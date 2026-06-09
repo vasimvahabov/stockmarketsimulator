@@ -1,9 +1,9 @@
-package com.vasimvahabov.stockmarketsimulator.scheduler;
+package com.vasimvahabov.stockmarketsimulator.synchorizer;
 
 import com.vasimvahabov.stockmarketsimulator.config.FinnhubProps;
 import com.vasimvahabov.stockmarketsimulator.dto.response.QuoteWSResponse;
 import com.vasimvahabov.stockmarketsimulator.entity.Stock;
-import com.vasimvahabov.stockmarketsimulator.scheduler.properties.QuoteSynchronizerProps;
+import com.vasimvahabov.stockmarketsimulator.synchorizer.properties.QuoteSynchronizerProps;
 import com.vasimvahabov.stockmarketsimulator.service.QuoteService;
 import com.vasimvahabov.stockmarketsimulator.service.StockService;
 import com.vasimvahabov.stockmarketsimulator.ws.handlers.QuoteWSHandler;

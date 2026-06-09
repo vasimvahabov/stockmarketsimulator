@@ -1,8 +1,8 @@
 package com.vasimvahabov.stockmarketsimulator.config;
 
 import com.vasimvahabov.stockmarketsimulator.constant.ExecutorThread;
-import com.vasimvahabov.stockmarketsimulator.scheduler.properties.QuoteSynchronizerProps;
-import com.vasimvahabov.stockmarketsimulator.scheduler.properties.StockSynchronizerProps;
+import com.vasimvahabov.stockmarketsimulator.synchorizer.properties.QuoteSynchronizerProps;
+import com.vasimvahabov.stockmarketsimulator.synchorizer.properties.StockSynchronizerProps;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
