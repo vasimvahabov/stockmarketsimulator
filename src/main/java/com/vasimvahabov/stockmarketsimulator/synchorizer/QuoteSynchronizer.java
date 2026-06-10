@@ -49,8 +49,6 @@ public class QuoteSynchronizer implements ApplicationRunner {
     @Qualifier("quoteScheduledExecutor")
     ScheduledExecutorService executor;
 
-    Queue<QuoteWSResponse> wsResponses = new ConcurrentLinkedQueue<>();
-
     @Override
     public void run(@Nonnull ApplicationArguments args) throws Exception {
         FinnhubProps.WebSocket wsPropsFinnhub = finnhubProps.getWebsocket();
@@ -74,6 +72,8 @@ public class QuoteSynchronizer implements ApplicationRunner {
     private void connectToWebSocket(List<String> batchSymbols,
                                     Map<String, Stock> stocksMap,
                                     FinnhubProps.WebSocket finnhubWSProps) {
+        Queue<QuoteWSResponse> wsResponses = new ConcurrentLinkedQueue<>();
+
         CountDownLatch closeConnectionLatch = new CountDownLatch(1);
         QuoteSynchronizerProps.WebSocket syncPropsWs = syncProps.getWebSocket();
 
