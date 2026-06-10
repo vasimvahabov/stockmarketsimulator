@@ -30,6 +30,7 @@ public class QuoteServiceImpl implements QuoteService {
     QuoteMapper quoteMapper;
 
     public void create(@NonNull List<QuoteWSResponse> wsResponses, @NonNull Map<String, Stock> stocksMap) {
+        log.info("Starting quote creation process with {} responses", wsResponses.size());
         List<Quote> quotesToCreate = wsResponses
                 .stream()
                 .flatMap(wsResponse -> Optional.ofNullable(wsResponse.data())
@@ -37,7 +38,12 @@ public class QuoteServiceImpl implements QuoteService {
                 .map(data -> quoteMapper.wsResponseToEntity(data, stocksMap))
                 .toList();
 
-        log.info("Creating {} quotes", quotesToCreate.size());
+        if(quotesToCreate.isEmpty()) {
+            log.warn("No quotes to create from {} responses", wsResponses.size());
+            return;
+        }
+
+        log.info("Preparing to create {} quotes", quotesToCreate.size());
         List<Quote> savedQuotes = quoteRepository.saveAll(quotesToCreate);
         log.info("Successfully created {} quotes", savedQuotes.size());
     }
