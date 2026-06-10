@@ -33,8 +33,9 @@ public class QuoteWSHandler extends TextWebSocketHandler {
 
     @Override
     public void handleTextMessage(@Nonnull WebSocketSession session,
-                                  @Nonnull TextMessage message) throws IOException {
+                                  @Nonnull TextMessage message) throws Exception {
         QuoteWSResponse wsResponse = objectMapper.readValue(message.getPayload(), QuoteWSResponse.class);
+        log.info("Received quote response: {}", wsResponse);
         wsResponses.offer(wsResponse);
     }
 
