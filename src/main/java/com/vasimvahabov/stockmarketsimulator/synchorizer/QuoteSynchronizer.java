@@ -54,15 +54,15 @@ public class QuoteSynchronizer implements ApplicationRunner {
         FinnhubProps.WebSocket wsPropsFinnhub = finnhubProps.getWebsocket();
         QuoteSynchronizerProps.WebSocket wsPropSync = syncProps.getWebSocket();
 
-        Map<String, Stock> stockMap = stockService.fetchAllStocksAsMap();
-        List<String> symbols = new ArrayList<>(stockMap.keySet());
+        Map<String, Stock> stocksMap = stockService.fetchAllStocksAsMap();
+        List<String> symbols = List.copyOf(stocksMap.keySet());
         IntStream.iterate(0, i -> i < symbols.size(), i -> i + wsPropSync.batchSize()).forEach(start -> {
             int end = Math.min(start + wsPropSync.batchSize(), symbols.size());
             long delay = (start / wsPropSync.batchSize()) * wsPropSync.batchDelay();
 
             List<String> batchSymbols = symbols.subList(start, end);
             executor.schedule(
-                    () -> connectToWebSocket(batchSymbols, stockMap, wsPropsFinnhub),
+                    () -> connectToWebSocket(batchSymbols, stocksMap, wsPropsFinnhub),
                     delay,
                     wsPropSync.batchDelayUnit()
             );
