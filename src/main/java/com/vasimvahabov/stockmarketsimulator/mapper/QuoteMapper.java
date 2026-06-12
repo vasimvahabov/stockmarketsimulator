@@ -15,8 +15,8 @@ public interface QuoteMapper {
     @Mapping(target = "lastPrice", source = "data.lastPrice")
     @Mapping(target = "volume", source = "data.volume")
     @Mapping(
-            target = "timeStampMs",
-            source = "data.timeStampMs",
+            target = "timestampMs",
+            source = "data.timestampMs",
             qualifiedByName = "millisToInstant"
     )
     @Mapping(

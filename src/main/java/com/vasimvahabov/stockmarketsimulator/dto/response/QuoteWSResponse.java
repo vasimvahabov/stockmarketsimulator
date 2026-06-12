@@ -19,7 +19,7 @@ public record QuoteWSResponse(
 
             @JsonProperty("p") BigDecimal lastPrice,
 
-            @JsonProperty("t") long timeStampMs,
+            @JsonProperty("t") long timestampMs,
 
             @JsonProperty("v") float volume,
 

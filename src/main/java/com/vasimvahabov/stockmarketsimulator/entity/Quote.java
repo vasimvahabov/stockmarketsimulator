@@ -33,8 +33,8 @@ public class Quote {
     @Column(name = "last_price")
     BigDecimal lastPrice;
 
-    @Column(name = "time_stamp_ms")
-    Instant timeStampMs;
+    @Column(name = "timestamp_ms")
+    Instant timestampMs;
 
     @Column(name = "volume")
     BigDecimal volume;
