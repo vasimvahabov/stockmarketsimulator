@@ -12,7 +12,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
 import java.util.*;
@@ -47,7 +46,7 @@ public class QuoteServiceImpl implements QuoteService {
 
     @Override
     public List<Quote> fetchQuotesByTimestampMsGreaterThanOrEqualTo(Instant timeStampMs) {
-        return quoteRepository.findByTimestampMsGreaterThanEqual(timeStampMs);
+        return Collections.unmodifiableList(quoteRepository.findByTimestampMsGreaterThanEqual(timeStampMs));
     }
 
 }
