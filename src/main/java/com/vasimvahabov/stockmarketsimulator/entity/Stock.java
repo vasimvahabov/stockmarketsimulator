@@ -44,7 +44,7 @@ public class Stock {
     @Column(name = "mic")
     String mic;
 
-    @Column(name = "symbol")
+    @Column(name = "symbol", nullable = false)
     String symbol;
 
     // Fix
