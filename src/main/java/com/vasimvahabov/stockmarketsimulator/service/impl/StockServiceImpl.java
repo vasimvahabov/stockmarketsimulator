@@ -76,7 +76,9 @@ public class StockServiceImpl implements StockService {
         return entityManager.createQuery(query)
                 .getResultList()
                 .stream()
-                .collect(Collectors.toMap(Stock::getSymbol, Function.identity()));
+                .collect(Collectors.toUnmodifiableMap(
+                        Stock::getSymbol, Function.identity()
+                ));
     }
 
     private List<StockResponse> fetchByExchange(Exchange exchange) {
