@@ -4,6 +4,7 @@ import com.vasimvahabov.stockmarketsimulator.constant.Exchange;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.mapping.PrimaryKey;
 
 import java.util.List;
 
@@ -12,7 +13,13 @@ import java.util.List;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "stocks")
+@Table(
+        name = "stocks",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uniq_symbol",
+                columnNames = "symbol"
+        )
+)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Stock {
 
