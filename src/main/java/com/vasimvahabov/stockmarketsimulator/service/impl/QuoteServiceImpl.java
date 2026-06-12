@@ -1,13 +1,11 @@
 package com.vasimvahabov.stockmarketsimulator.service.impl;
 
-import com.vasimvahabov.stockmarketsimulator.dto.response.QuoteResponse;
 import com.vasimvahabov.stockmarketsimulator.dto.response.QuoteWSResponse;
 import com.vasimvahabov.stockmarketsimulator.entity.Quote;
 import com.vasimvahabov.stockmarketsimulator.entity.Stock;
 import com.vasimvahabov.stockmarketsimulator.mapper.QuoteMapper;
 import com.vasimvahabov.stockmarketsimulator.repository.QuoteRepository;
 import com.vasimvahabov.stockmarketsimulator.service.QuoteService;
-import jakarta.annotation.Nonnull;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -15,8 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 
+import java.time.Instant;
 import java.util.*;
 
 @Slf4j
@@ -25,7 +23,6 @@ import java.util.*;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class QuoteServiceImpl implements QuoteService {
 
-    RestClient restClient;
     QuoteRepository quoteRepository;
     QuoteMapper quoteMapper;
 
@@ -48,17 +45,9 @@ public class QuoteServiceImpl implements QuoteService {
         log.info("Successfully created {} quotes", savedQuotes.size());
     }
 
-
-    private QuoteResponse fetchQuoteBySymbol(@Nonnull String symbol) {
-        var uri = String.format("/quote?symbol=%s", symbol);
-        return restClient.get()
-                .uri(uri)
-                .exchange((_, response) -> {
-                    if (!response.getStatusCode().isError()) {
-                        return response.bodyTo(QuoteResponse.class);
-                    }
-                    throw new RestClientException("Exception occurred: %s".formatted(response.getStatusText()));
-                });
+    @Override
+    public List<Quote> fetchQuotesByTimestampMsGreaterThanOrEqualTo(Instant timeStampMs) {
+        return quoteRepository.findByTimestampMsGreaterThanEqual(timeStampMs);
     }
 
 }
