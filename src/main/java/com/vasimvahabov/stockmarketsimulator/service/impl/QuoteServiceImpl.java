@@ -45,8 +45,8 @@ public class QuoteServiceImpl implements QuoteService {
     }
 
     @Override
-    public List<Quote> fetchQuotesByTimestampMsGreaterThanOrEqualTo(Instant timeStampMs) {
-        return Collections.unmodifiableList(quoteRepository.findByTimestampMsGreaterThanEqual(timeStampMs));
+    public List<Quote> fetchQuotesSinceTimestampMs(Instant timestampMs) {
+        return Collections.unmodifiableList(quoteRepository.findByTimestampMsGreaterThanEqual(timestampMs));
     }
 
 }
