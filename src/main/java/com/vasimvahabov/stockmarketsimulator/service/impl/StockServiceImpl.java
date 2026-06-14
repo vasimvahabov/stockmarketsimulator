@@ -68,7 +68,7 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public Map<String, Stock> fetchAllStocksAsMap() {
+    public Map<String, Stock> retrieveStocksAsMap() {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
         CriteriaQuery<Stock> query = builder.createQuery(Stock.class);
         Root<Stock> root = query.from(Stock.class);
