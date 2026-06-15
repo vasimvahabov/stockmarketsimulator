@@ -4,8 +4,10 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -22,6 +24,10 @@ public class DateTimeUtils {
 
     public static long toMillis(long duration, TimeUnit timeUnit) {
         return TimeUnit.MILLISECONDS.convert(duration, timeUnit);
+    }
+
+    public static Instant yesterday() {
+        return Instant.now().minus(1, ChronoUnit.DAYS);
     }
 
 }
