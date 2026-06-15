@@ -62,16 +62,16 @@ public class QuoteSynchronizer implements ApplicationRunner {
 
             List<String> batchSymbols = symbols.subList(start, end);
             executor.schedule(
-                    () -> connectToWebSocket(batchSymbols, stocksMap, wsPropsFinnhub),
+                    () -> syncQuotesViaFinnhubWebSocket(batchSymbols, stocksMap, wsPropsFinnhub),
                     delay,
                     wsPropSync.batchDelayUnit()
             );
         });
     }
 
-    private void connectToWebSocket(List<String> batchSymbols,
-                                    Map<String, Stock> stocksMap,
-                                    FinnhubProps.WebSocket finnhubWSProps) {
+    private void syncQuotesViaFinnhubWebSocket(List<String> batchSymbols,
+                                               Map<String, Stock> stocksMap,
+                                               FinnhubProps.WebSocket finnhubWSProps) {
         Queue<QuoteWSResponse> wsResponses = new ConcurrentLinkedQueue<>();
 
         CountDownLatch closeConnectionLatch = new CountDownLatch(1);
