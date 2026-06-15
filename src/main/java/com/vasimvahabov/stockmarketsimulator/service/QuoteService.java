@@ -15,4 +15,6 @@ public interface QuoteService {
 
     List<Quote> retrieveQuotesSinceTimestampMs(Instant timestampMs);
 
+    Map<Stock, List<Quote>> retrieveQuotesAsMapSinceTimestampMs(Instant timestampMs);
+
 }
