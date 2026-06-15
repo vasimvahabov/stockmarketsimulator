@@ -19,16 +19,19 @@ finnhub:
 
 executor:
   stock:
-    thread-pool-size: "${STOCK_EXECUTOR_REST_THREAD_POOL_SIZE:1}"
-    period: "${STOCK_EXECUTOR_REST_PERIOD:86400000}"
-    unit: "${STOCK_EXECUTOR_REST_UNIT:MILLISECONDS}"
+    scheduled:
+      rest:
+        pool-size: "${STOCK_SCHED_EXEC_REST_POOL_SIZE:1}"
+        period: "${STOCK_SCHED_EXEC_REST_PERIOD:86400000}"
+        unit: "${STOCK_SCHED_EXEC_REST_UNIT:MILLISECONDS}"
   quote:
-    websocket:
-      thread-pool-size: "${QUOTE_EXECUTOR_WS_THREAD_POOL_SIZE:2}"
-      session-duration: "${QUOTE_EXECUTOR_WS_SESSION_DURATION:45}"
-      session-duration-unit: "${QUOTE_EXECUTOR_WS_SESSION_DURATION_UNIT:SECONDS}"
-      close-grace-period: "${QUOTE_EXECUTOR_WS_CLOSE_GRACE_PERIOD:10}"
-      close-grace-period-unit: "${QUOTE_EXECUTOR_WS_CLOSE_GRACE_UNIT:SECONDS}"
-      batch-size: "${QUOTE_EXECUTOR_WS_BATCH_SIZE:30}"
-      batch-delay: "${QUOTE_EXECUTOR_WS_BATCH_DELAY:60}"
-      batch-delay-unit: "${QUOTE_EXECUTOR_WS_DELAY_BATCH_UNIT:SECONDS}"
+    scheduled:
+      websocket:
+        pool-size: "${QUOTE_SCHED_EXEC_WS_POOL_SIZE:2}"
+        session-duration: "${QUOTE_SCHED_EXEC_WS_SESSION_DURATION:45}"
+        session-unit: "${QUOTE_SCHED_EXEC_WS_SESSION_UNIT:SECONDS}"
+        grace-period: "${QUOTE_SCHED_EXEC_WS_GRACE_PERIOD:10}"
+        grace-unit: "${QUOTE_SCHED_EXEC_WS_GRACE_UNIT:SECONDS}"
+        batch-size: "${QUOTE_SCHED_EXEC_WS_BATCH_SIZE:30}"
+        batch-delay: "${QUOTE_SCHED_EXEC_WS_BATCH_DELAY:60}"
+        batch-unit: "${QUOTE_SCHED_EXEC_WS_BATCH_UNIT:SECONDS}"

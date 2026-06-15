@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@ConfigurationProperties("executor.stock")
+@ConfigurationProperties("executor.stock.scheduled.rest")
 public class StockSynchronizerProps {
 
     Long initialDelay;
@@ -18,7 +18,6 @@ public class StockSynchronizerProps {
 
     TimeUnit unit;
 
-    int threadPoolSize;
-
+    int poolSize;
 
 }

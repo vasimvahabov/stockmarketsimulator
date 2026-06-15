@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.concurrent.*;
 
+import static com.vasimvahabov.stockmarketsimulator.constant.ExecutorThread.*;
+
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
@@ -25,20 +27,17 @@ public class ExecutorConfig {
     @Bean(name = "stockScheduledExecutor", destroyMethod = "close")
     public ScheduledExecutorService stockScheduledExecutor() {
         return new ScheduledThreadPoolExecutor(
-                stockSyncProps.getThreadPoolSize(),
-                r -> new Thread(r, ExecutorThread.STOCK_SYNC.getThread())
+                stockSyncProps.getPoolSize(),
+                r -> new Thread(r, STOCK_SYNC.getThread())
         );
     }
 
     @Bean(name = "quoteScheduledExecutor")
     public ScheduledExecutorService quoteScheduledExecutor() {
         return new ScheduledThreadPoolExecutor(
-                quoteSyncProps.getWebSocket().threadPoolSize(),
-                r -> new Thread(r, ExecutorThread.QUOTE_SYNC.getThread())
+                quoteSyncProps.getWebSocket().poolSize(),
+                r -> new Thread(r, QUOTE_SYNC.getThread())
         );
     }
 
 }
-
-
-

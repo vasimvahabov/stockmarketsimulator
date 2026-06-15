@@ -12,8 +12,9 @@ spring:
 
 executor:
   stock:
-    initial-delay: ${INITIAL_DELAY_STOCK_EXECUTOR:60000}
-
+    scheduled:
+      rest:
+        initial-delay: ${STOCK_EXECUTOR_INITIAL_DELAY:60000}
 #  output:
 #    ansi:
 #      enabled: always

@@ -64,7 +64,7 @@ public class QuoteSynchronizer implements ApplicationRunner {
             executor.schedule(
                     () -> syncQuotesViaFinnhubWebSocket(batchSymbols, stocksMap, wsPropsFinnhub),
                     delay,
-                    wsPropSync.batchDelayUnit()
+                    wsPropSync.batchUnit()
             );
         });
     }
@@ -84,7 +84,7 @@ public class QuoteSynchronizer implements ApplicationRunner {
         try {
             WebSocketSession wsSession = sessionFuture.get(finnhubWSProps.timeout(), finnhubWSProps.timeoutUnit());
             executor.schedule(() -> closeFinnhubWSConnection(wsSession),
-                    syncPropsWs.sessionDuration(), syncPropsWs.sessionDurationUnit());
+                    syncPropsWs.sessionDuration(), syncPropsWs.sessionUnit());
 
             long closeTimeoutMs = syncPropsWs.sessionDurationInMillis() + syncPropsWs.closeGracePeriodInMillis();
             boolean isConnectionClosed = closeConnectionLatch.await(closeTimeoutMs, TimeUnit.MILLISECONDS);

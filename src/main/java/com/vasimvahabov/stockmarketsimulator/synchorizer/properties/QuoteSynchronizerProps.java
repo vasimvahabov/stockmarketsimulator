@@ -10,37 +10,37 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@ConfigurationProperties("executor.quote")
+@ConfigurationProperties("executor.quote.scheduled")
 public class QuoteSynchronizerProps {
 
     WebSocket webSocket;
 
     public record WebSocket(
 
-            int threadPoolSize,
+            int poolSize,
 
             long sessionDuration,
 
-            TimeUnit sessionDurationUnit,
+            TimeUnit sessionUnit,
 
-            long closeGracePeriod,
+            long gracePeriod,
 
-            TimeUnit closeGracePeriodUnit,
+            TimeUnit graceUnit,
 
             int batchSize,
 
             long batchDelay,
 
-            TimeUnit batchDelayUnit
+            TimeUnit batchUnit
 
     ) {
 
         public long sessionDurationInMillis() {
-            return DateTimeUtils.toMillis(sessionDuration, sessionDurationUnit);
+            return DateTimeUtils.toMillis(sessionDuration, sessionUnit);
         }
 
         public long closeGracePeriodInMillis() {
-            return DateTimeUtils.toMillis(closeGracePeriod, closeGracePeriodUnit);
+            return DateTimeUtils.toMillis(gracePeriod, graceUnit);
         }
 
     }
