@@ -43,7 +43,8 @@ public class Quote {
     @JoinColumn(
             name = "stock_id",
             referencedColumnName = "id",
-            foreignKey = @ForeignKey(name = "fk_quote_stock")
+            foreignKey = @ForeignKey(name = "fk_quote_stock"),
+            nullable = false
     )
     Stock stock;
 
