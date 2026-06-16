@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static com.vasimvahabov.stockmarketsimulator.constant.Exchange.*;
 
@@ -44,10 +45,10 @@ public class StockSynchronizer implements ApplicationRunner {
                 synchronizerProps.getUnit()
         );
         log.info(
-                "Stock sync executor started [delay={}ms, period={}ms, timeunit={}, exchange={}]",
+                "Stock synchronizer executor started [delay={}ms, period={}ms, timeunit={}, exchange={}]",
                 initialDelayMillis,
                 synchronizerProps.getPeriod(),
-                synchronizerProps.getUnit(),
+                TimeUnit.MILLISECONDS,
                 EXCHANGE
         );
     }

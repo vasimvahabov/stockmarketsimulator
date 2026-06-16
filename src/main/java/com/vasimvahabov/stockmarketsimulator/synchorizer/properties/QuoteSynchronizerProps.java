@@ -19,6 +19,10 @@ public class QuoteSynchronizerProps {
 
             int poolSize,
 
+            long initialDelay,
+
+            TimeUnit unit,
+
             long sessionDuration,
 
             TimeUnit sessionUnit,

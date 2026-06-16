@@ -27,6 +27,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
 
+import static com.vasimvahabov.stockmarketsimulator.util.DateTimeUtils.toMillis;
+
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
@@ -51,42 +53,56 @@ public class QuoteSynchronizer implements ApplicationRunner {
 
     @Override
     public void run(@Nonnull ApplicationArguments args) throws Exception {
-        FinnhubProps.WebSocket wsPropsFinnhub = finnhubProps.getWebsocket();
-        QuoteSynchronizerProps.WebSocket wsPropSync = syncProps.getWebSocket();
+        QuoteSynchronizerProps.WebSocket wsSyncProps = syncProps.getWebSocket();
+        long initialDelayMillis = toMillis(wsSyncProps.initialDelay(), wsSyncProps.unit());
+        executor.schedule(
+                () -> startSynchronization(wsSyncProps),
+                initialDelayMillis,
+                TimeUnit.MILLISECONDS
+        );
+        log.info(
+                "Quote synchronizer executor scheduled [delay={}ms, timeunit={}]",
+                initialDelayMillis,
+                TimeUnit.MILLISECONDS
+        );
+    }
+
+    private void startSynchronization(QuoteSynchronizerProps.WebSocket wsSyncProps) {
+        FinnhubProps.WebSocket wsFinnhubProps = finnhubProps.getWebsocket();
 
         Map<String, Stock> stocksMap = stockService.retrieveStocksAsMap();
         List<String> symbols = List.copyOf(stocksMap.keySet());
-        IntStream.iterate(0, i -> i < symbols.size(), i -> i + wsPropSync.batchSize()).forEach(start -> {
-            int end = Math.min(start + wsPropSync.batchSize(), symbols.size());
-            long delay = (start / wsPropSync.batchSize()) * wsPropSync.batchDelay();
+        IntStream.iterate(0, i -> i < symbols.size(), i -> i + wsSyncProps.batchSize()).forEach(start -> {
+            int end = Math.min(start + wsSyncProps.batchSize(), symbols.size());
+            long delay = (start / wsSyncProps.batchSize()) * wsSyncProps.batchDelay();
 
             List<String> batchSymbols = symbols.subList(start, end);
             executor.schedule(
-                    () -> syncQuotesViaFinnhubWebSocket(batchSymbols, stocksMap, wsPropsFinnhub),
+                    () -> subscribeToQuotes(batchSymbols, stocksMap, wsFinnhubProps, wsSyncProps),
                     delay,
-                    wsPropSync.batchUnit()
+                    wsSyncProps.batchUnit()
             );
         });
     }
 
-    private void syncQuotesViaFinnhubWebSocket(List<String> batchSymbols,
-                                               Map<String, Stock> stocksMap,
-                                               FinnhubProps.WebSocket finnhubWSProps) {
+    private void subscribeToQuotes(List<String> batchSymbols,
+                                   Map<String, Stock> stocksMap,
+                                   FinnhubProps.WebSocket finnhubWSProps,
+                                   QuoteSynchronizerProps.WebSocket wsSyncProps) {
         Queue<QuoteWSResponse> wsResponses = new ConcurrentLinkedQueue<>();
 
         CountDownLatch closeConnectionLatch = new CountDownLatch(1);
-        QuoteSynchronizerProps.WebSocket syncPropsWs = syncProps.getWebSocket();
 
         CompletableFuture<WebSocketSession> sessionFuture = wsClient.execute(
                 new QuoteWSHandler(objectMapper, batchSymbols, wsResponses, closeConnectionLatch),
-                buildFinnhubWSUri(finnhubWSProps)
+                buildWebSocketUri(finnhubWSProps)
         );
         try {
             WebSocketSession wsSession = sessionFuture.get(finnhubWSProps.timeout(), finnhubWSProps.timeoutUnit());
-            executor.schedule(() -> closeFinnhubWSConnection(wsSession),
-                    syncPropsWs.sessionDuration(), syncPropsWs.sessionUnit());
+            executor.schedule(() -> unsubscribe(wsSession),
+                    wsSyncProps.sessionDuration(), wsSyncProps.sessionUnit());
 
-            long closeTimeoutMs = syncPropsWs.sessionDurationInMillis() + syncPropsWs.closeGracePeriodInMillis();
+            long closeTimeoutMs = wsSyncProps.sessionDurationInMillis() + wsSyncProps.closeGracePeriodInMillis();
             boolean isConnectionClosed = closeConnectionLatch.await(closeTimeoutMs, TimeUnit.MILLISECONDS);
             if (isConnectionClosed) {
                 log.info("Closed Finnhub WebSocket connection gracefully");
@@ -105,14 +121,14 @@ public class QuoteSynchronizer implements ApplicationRunner {
 
     }
 
-    private String buildFinnhubWSUri(FinnhubProps.WebSocket wsProps) {
+    private String buildWebSocketUri(FinnhubProps.WebSocket wsProps) {
         return UriComponentsBuilder
                 .fromUriString(wsProps.uri())
                 .queryParam(wsProps.authQueryParam(), finnhubProps.getApiKey())
                 .toUriString();
     }
 
-    private void closeFinnhubWSConnection(WebSocketSession wsSession) {
+    private void unsubscribe(WebSocketSession wsSession) {
         try {
             wsSession.close(CloseStatus.NORMAL);
         } catch (IOException exception) {
