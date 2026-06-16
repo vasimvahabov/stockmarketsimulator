@@ -14,7 +14,11 @@ executor:
   stock:
     scheduled:
       rest:
-        initial-delay: ${STOCK_EXECUTOR_INITIAL_DELAY:60000}
+        initial-delay: ${STOCK_EXEC_INIT_DELAY:60000}
+  quote:
+    scheduled:
+      websocket:
+        initial-delay: "${QUOTE_SCHED_EXEC_WS_INIT_DELAY:60}"
 #  output:
 #    ansi:
 #      enabled: always
