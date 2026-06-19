@@ -11,7 +11,7 @@ import java.util.Map;
 
 public interface QuoteService {
 
-    void create(@Nonnull List<QuoteWSResponse> wsResponses, @Nonnull Map<String, Stock> stocksMap);
+    void createQuotes(@Nonnull List<QuoteWSResponse> wsResponses, @Nonnull Map<String, Stock> stocksMap);
 
     List<Quote> retrieveQuotesSinceTimestampMs(Instant timestampMs);
 

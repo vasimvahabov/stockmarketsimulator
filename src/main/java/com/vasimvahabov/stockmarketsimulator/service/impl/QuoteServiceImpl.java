@@ -35,7 +35,7 @@ public class QuoteServiceImpl implements QuoteService {
 
     EntityManager entityManager;
 
-    public void create(@NonNull List<QuoteWSResponse> wsResponses, @NonNull Map<String, Stock> stocksMap) {
+    public void createQuotes(@NonNull List<QuoteWSResponse> wsResponses, @NonNull Map<String, Stock> stocksMap) {
         try {
             log.info("Starting quote creation process with {} responses", wsResponses.size());
             List<Quote> quotesToCreate = wsResponses

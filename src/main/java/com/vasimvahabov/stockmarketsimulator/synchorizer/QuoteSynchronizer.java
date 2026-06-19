@@ -22,7 +22,6 @@ import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import tools.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.IntStream;
@@ -48,14 +47,17 @@ public class QuoteSynchronizer implements ApplicationRunner {
     @Qualifier("quoteWSClient")
     WebSocketClient wsClient;
 
+    @Qualifier("quoteExecutor")
+    ExecutorService executor;
+
     @Qualifier("quoteScheduledExecutor")
-    ScheduledExecutorService executor;
+    ScheduledExecutorService scheduledExecutor;
 
     @Override
     public void run(@Nonnull ApplicationArguments args) throws Exception {
         QuoteSynchronizerProps.WebSocket wsSyncProps = syncProps.getScheduled().webSocket();
         long initialDelayMillis = toMillis(wsSyncProps.initialDelay(), wsSyncProps.unit());
-        executor.schedule(
+        scheduledExecutor.schedule(
                 () -> startSynchronization(wsSyncProps),
                 initialDelayMillis,
                 TimeUnit.MILLISECONDS
@@ -77,7 +79,7 @@ public class QuoteSynchronizer implements ApplicationRunner {
             long delay = (start / wsSyncProps.batchSize()) * wsSyncProps.batchDelay();
 
             List<String> batchSymbols = symbols.subList(start, end);
-            executor.schedule(
+            scheduledExecutor.schedule(
                     () -> subscribeToQuotes(batchSymbols, stocksMap, wsFinnhubProps, wsSyncProps),
                     delay,
                     wsSyncProps.batchUnit()
@@ -85,40 +87,50 @@ public class QuoteSynchronizer implements ApplicationRunner {
         });
     }
 
-    private void subscribeToQuotes(List<String> batchSymbols,
-                                   Map<String, Stock> stocksMap,
-                                   FinnhubProps.WebSocket finnhubWSProps,
-                                   QuoteSynchronizerProps.WebSocket wsSyncProps) {
+    private CompletableFuture<Void> subscribeToQuotes(List<String> batchSymbols,
+                                                      Map<String, Stock> stocksMap,
+                                                      FinnhubProps.WebSocket finnhubWSProps,
+                                                      QuoteSynchronizerProps.WebSocket wsSyncProps) {
         Queue<QuoteWSResponse> wsResponses = new ConcurrentLinkedQueue<>();
-
-        CountDownLatch closeConnectionLatch = new CountDownLatch(1);
+        CompletableFuture<Void> connectionCloseFuture = new CompletableFuture<>();
 
         CompletableFuture<WebSocketSession> sessionFuture = wsClient.execute(
-                new QuoteWSHandler(objectMapper, batchSymbols, wsResponses, closeConnectionLatch),
+                new QuoteWSHandler(objectMapper, batchSymbols, wsResponses, connectionCloseFuture),
                 buildWebSocketUri(finnhubWSProps)
-        );
-        try {
-            WebSocketSession wsSession = sessionFuture.get(finnhubWSProps.timeout(), finnhubWSProps.timeoutUnit());
-            executor.schedule(() -> unsubscribe(wsSession),
-                    wsSyncProps.sessionDuration(), wsSyncProps.sessionUnit());
+        ).orTimeout(finnhubWSProps.timeout(), finnhubWSProps.timeoutUnit());
 
-            long closeTimeoutMs = wsSyncProps.sessionDurationInMillis() + wsSyncProps.closeGracePeriodInMillis();
-            boolean isConnectionClosed = closeConnectionLatch.await(closeTimeoutMs, TimeUnit.MILLISECONDS);
-            if (isConnectionClosed) {
-                log.info("Closed Finnhub WebSocket connection gracefully");
-            } else {
-                log.warn("Timed out to gracefully close Finnhub WebSocket connection");
+        sessionFuture.whenComplete((_, throwable) -> {
+            if (throwable != null) {
+                log.error(
+                        "Failed to connect to Finnhub WebSocket server: {}",
+                        throwable.getMessage(),
+                        throwable
+                );
+                connectionCloseFuture.completeExceptionally(throwable);
             }
-            quoteService.create(wsResponses.stream().toList(), stocksMap);
-        } catch (
-                ExecutionException |
-                InterruptedException |
-                CancellationException |
-                TimeoutException exception) {
-            log.error("Failed to connect to Finnhub WebSocket server: {}",
-                    exception.getMessage(), exception);
-        }
+        });
 
+        sessionFuture.thenAccept(wsSession -> scheduledExecutor.schedule(
+                () -> unsubscribe(wsSession, connectionCloseFuture),
+                wsSyncProps.sessionDuration(),
+                wsSyncProps.sessionUnit()
+        ));
+
+        long closeTimeoutMs = wsSyncProps.sessionDurationInMillis() + wsSyncProps.closeGracePeriodInMillis();
+        return connectionCloseFuture
+                .orTimeout(closeTimeoutMs, TimeUnit.MILLISECONDS)
+                .whenComplete((_, throwable) -> {
+                    if (throwable == null) {
+                        log.info("Closed Finnhub WebSocket connection gracefully");
+                        createQuotesAsync(List.copyOf(wsResponses), stocksMap);
+                    } else {
+                        log.error(
+                                "Finnhub WebSocket session aborted due to an upstream failure: {}",
+                                throwable.getMessage(),
+                                throwable
+                        );
+                    }
+                });
     }
 
     private String buildWebSocketUri(FinnhubProps.WebSocket wsProps) {
@@ -128,12 +140,17 @@ public class QuoteSynchronizer implements ApplicationRunner {
                 .toUriString();
     }
 
-    private void unsubscribe(WebSocketSession wsSession) {
+    private void unsubscribe(WebSocketSession wsSession, CompletableFuture<Void> connectionCloseFuture) {
         try {
             wsSession.close(CloseStatus.NORMAL);
-        } catch (IOException exception) {
+        } catch (Exception exception) {
+            connectionCloseFuture.completeExceptionally(exception);
             log.error("Failed to close WebSocket session {}", exception.getMessage(), exception);
         }
+    }
+
+    private void createQuotesAsync(List<QuoteWSResponse> quotes, Map<String, Stock> stocksMap) {
+        CompletableFuture.runAsync(() -> quoteService.createQuotes(quotes, stocksMap), executor);
     }
 
 }

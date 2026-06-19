@@ -16,7 +16,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,7 +29,7 @@ public class QuoteWSHandler extends TextWebSocketHandler {
 
     Queue<QuoteWSResponse> wsResponses;
 
-    CountDownLatch closeConnectionLatch;
+    CompletableFuture<Void> onCloseFuture;
 
     @Override
     public void handleTextMessage(@Nonnull WebSocketSession session,
@@ -51,7 +51,7 @@ public class QuoteWSHandler extends TextWebSocketHandler {
                         new QuoteWSRequest("subscribe", symbol)
                 );
                 session.sendMessage(new TextMessage(payload));
-                log.info("Subscribed to {}", symbol);
+                log.debug("Subscribed to {}", symbol);
             } catch (IOException exception) {
                 log.error("Failed to subscribe to {}: {}", symbol, exception.getMessage(), exception);
             }
@@ -62,7 +62,7 @@ public class QuoteWSHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(@Nonnull WebSocketSession session,
                                       @Nonnull CloseStatus status) {
         log.info("Closed connection to Finnhub WebSocket server {}", status.getReason());
-        closeConnectionLatch.countDown();
+        onCloseFuture.complete(null);
     }
 
 }
