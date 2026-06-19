@@ -10,10 +10,20 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@ConfigurationProperties("executor.quote.scheduled")
+@ConfigurationProperties("executor.quote")
 public class QuoteSynchronizerProps {
 
-    WebSocket webSocket;
+    int poolSize;
+
+    int queueBound;
+
+    long aliveTime;
+
+    TimeUnit aliveUnit;
+
+    Scheduled scheduled;
+
+    public record Scheduled (WebSocket webSocket) { }
 
     public record WebSocket(
 

@@ -35,9 +35,19 @@ public class ExecutorConfig {
     @Bean(name = "quoteScheduledExecutor")
     public ScheduledExecutorService quoteScheduledExecutor() {
         return new ScheduledThreadPoolExecutor(
-                quoteSyncProps.getWebSocket().poolSize(),
+                quoteSyncProps.getScheduled().webSocket().poolSize(),
                 r -> new Thread(r, QUOTE_SYNC.getThread())
         );
     }
 
+    @Bean(name = "quoteExecutor")
+    public ExecutorService quoteExecutor() {
+        return new ThreadPoolExecutor(
+                quoteSyncProps.getPoolSize(),
+                quoteSyncProps.getPoolSize(),
+                quoteSyncProps.getAliveTime(),
+                quoteSyncProps.getAliveUnit(),
+                new LinkedBlockingQueue<>(quoteSyncProps.getQueueBound())
+        );
+    }
 }

@@ -53,7 +53,7 @@ public class QuoteSynchronizer implements ApplicationRunner {
 
     @Override
     public void run(@Nonnull ApplicationArguments args) throws Exception {
-        QuoteSynchronizerProps.WebSocket wsSyncProps = syncProps.getWebSocket();
+        QuoteSynchronizerProps.WebSocket wsSyncProps = syncProps.getScheduled().webSocket();
         long initialDelayMillis = toMillis(wsSyncProps.initialDelay(), wsSyncProps.unit());
         executor.schedule(
                 () -> startSynchronization(wsSyncProps),
