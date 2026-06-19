@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -37,22 +36,26 @@ public class QuoteServiceImpl implements QuoteService {
     EntityManager entityManager;
 
     public void create(@NonNull List<QuoteWSResponse> wsResponses, @NonNull Map<String, Stock> stocksMap) {
-        log.info("Starting quote creation process with {} responses", wsResponses.size());
-        List<Quote> quotesToCreate = wsResponses
-                .stream()
-                .flatMap(wsResponse -> Optional.ofNullable(wsResponse.data())
-                        .orElseGet(Collections::emptyList).stream())
-                .map(data -> quoteMapper.wsResponseToEntity(data, stocksMap))
-                .toList();
+        try {
+            log.info("Starting quote creation process with {} responses", wsResponses.size());
+            List<Quote> quotesToCreate = wsResponses
+                    .stream()
+                    .flatMap(wsResponse -> Optional.ofNullable(wsResponse.data())
+                            .orElseGet(Collections::emptyList).stream())
+                    .map(data -> quoteMapper.wsResponseToEntity(data, stocksMap))
+                    .toList();
 
-        if (quotesToCreate.isEmpty()) {
-            log.warn("No quotes to create from {} responses", wsResponses.size());
-            return;
+            if (quotesToCreate.isEmpty()) {
+                log.warn("No quotes to create from {} responses", wsResponses.size());
+                return;
+            }
+
+            log.info("Preparing to create {} quotes", quotesToCreate.size());
+            List<Quote> savedQuotes = quoteRepository.saveAll(quotesToCreate);
+            log.info("Successfully created {} quotes", savedQuotes.size());
+        } catch (Exception exception) {
+            log.error("Failed to save quotes to database: {}", exception.getMessage(), exception);
         }
-
-        log.info("Preparing to create {} quotes", quotesToCreate.size());
-        List<Quote> savedQuotes = quoteRepository.saveAll(quotesToCreate);
-        log.info("Successfully created {} quotes", savedQuotes.size());
     }
 
     @Override
