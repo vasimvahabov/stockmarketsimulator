@@ -57,16 +57,25 @@ public class QuoteSynchronizer implements ApplicationRunner {
     public void run(@Nonnull ApplicationArguments args) throws Exception {
         QuoteSynchronizerProps.WebSocket wsSyncProps = syncProps.getScheduled().webSocket();
         long initialDelayMillis = toMillis(wsSyncProps.initialDelay(), wsSyncProps.unit());
-        scheduledExecutor.schedule(
-                () -> startSynchronization(wsSyncProps),
-                initialDelayMillis,
-                TimeUnit.MILLISECONDS
-        );
-        log.info(
-                "Quote synchronizer executor scheduled [delay={}ms, timeunit={}]",
-                initialDelayMillis,
-                TimeUnit.MILLISECONDS
-        );
+        Executor delayedExecutor = CompletableFuture.delayedExecutor(initialDelayMillis, TimeUnit.MILLISECONDS, scheduledExecutor);
+        CompletableFuture.runAsync(() -> startSynchronization(wsSyncProps), delayedExecutor)
+                .whenComplete((_, throwable) -> {
+                    if (throwable != null) {
+                        log.error(
+                                "Failed to schedule Quote synchronizer executor [delay={}ms, timeunit={}]: {}",
+                                initialDelayMillis,
+                                TimeUnit.MILLISECONDS,
+                                throwable.getMessage(),
+                                throwable
+                        );
+                    } else {
+                        log.info(
+                                "Scheduled Quote synchronizer executor [delay={}ms, timeunit={}]",
+                                initialDelayMillis,
+                                TimeUnit.MILLISECONDS
+                        );
+                    }
+                });
     }
 
     private void startSynchronization(QuoteSynchronizerProps.WebSocket wsSyncProps) {
@@ -79,18 +88,27 @@ public class QuoteSynchronizer implements ApplicationRunner {
             long delay = (start / wsSyncProps.batchSize()) * wsSyncProps.batchDelay();
 
             List<String> batchSymbols = symbols.subList(start, end);
-            scheduledExecutor.schedule(
+            Executor delayedExecutor = CompletableFuture.delayedExecutor(delay, wsSyncProps.batchUnit(), scheduledExecutor);
+
+            CompletableFuture.runAsync(
                     () -> subscribeToQuotes(batchSymbols, stocksMap, wsFinnhubProps, wsSyncProps),
-                    delay,
-                    wsSyncProps.batchUnit()
-            );
+                    delayedExecutor
+            ).whenComplete((_, throwable) -> {
+                if (throwable != null) {
+                    log.error(
+                            "Failed to process batch: {}",
+                            throwable.getMessage(),
+                            throwable
+                    );
+                }
+            });
         });
     }
 
-    private CompletableFuture<Void> subscribeToQuotes(List<String> batchSymbols,
-                                                      Map<String, Stock> stocksMap,
-                                                      FinnhubProps.WebSocket finnhubWSProps,
-                                                      QuoteSynchronizerProps.WebSocket wsSyncProps) {
+    private void subscribeToQuotes(List<String> batchSymbols,
+                                   Map<String, Stock> stocksMap,
+                                   FinnhubProps.WebSocket finnhubWSProps,
+                                   QuoteSynchronizerProps.WebSocket wsSyncProps) {
         Queue<QuoteWSResponse> wsResponses = new ConcurrentLinkedQueue<>();
         CompletableFuture<Void> connectionCloseFuture = new CompletableFuture<>();
 
@@ -110,19 +128,28 @@ public class QuoteSynchronizer implements ApplicationRunner {
             }
         });
 
-        sessionFuture.thenAccept(wsSession -> scheduledExecutor.schedule(
-                () -> unsubscribe(wsSession, connectionCloseFuture),
-                wsSyncProps.sessionDuration(),
-                wsSyncProps.sessionUnit()
-        ));
+        sessionFuture.thenAcceptAsync(
+                wsSession -> unsubscribe(wsSession, connectionCloseFuture),
+                CompletableFuture.delayedExecutor(
+                        wsSyncProps.sessionDuration(),
+                        wsSyncProps.sessionUnit(),
+                        scheduledExecutor
+                )
+        ).whenComplete((_, throwable) -> {
+            if (throwable != null) {
+                log.error("Failed to schedule unsubscribe: {}", throwable.getMessage(), throwable);
+                connectionCloseFuture.completeExceptionally(throwable);
+            }
+        });
 
         long closeTimeoutMs = wsSyncProps.sessionDurationInMillis() + wsSyncProps.closeGracePeriodInMillis();
-        return connectionCloseFuture
+        connectionCloseFuture
                 .orTimeout(closeTimeoutMs, TimeUnit.MILLISECONDS)
-                .whenComplete((_, throwable) -> {
+                .thenRunAsync(
+                        () -> quoteService.createQuotes(List.copyOf(wsResponses), stocksMap), executor
+                ).whenComplete((_, throwable) -> {
                     if (throwable == null) {
                         log.info("Closed Finnhub WebSocket connection gracefully");
-                        createQuotesAsync(List.copyOf(wsResponses), stocksMap);
                     } else {
                         log.error(
                                 "Finnhub WebSocket session aborted due to an upstream failure: {}",
@@ -147,10 +174,6 @@ public class QuoteSynchronizer implements ApplicationRunner {
             connectionCloseFuture.completeExceptionally(exception);
             log.error("Failed to close WebSocket session {}", exception.getMessage(), exception);
         }
-    }
-
-    private void createQuotesAsync(List<QuoteWSResponse> quotes, Map<String, Stock> stocksMap) {
-        CompletableFuture.runAsync(() -> quoteService.createQuotes(quotes, stocksMap), executor);
     }
 
 }
