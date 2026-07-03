@@ -1,6 +1,7 @@
 package com.vasimvahabov.stockmarketsimulator.config;
 
 import com.vasimvahabov.stockmarketsimulator.constant.ExecutorThread;
+import com.vasimvahabov.stockmarketsimulator.synchorizer.properties.CandleSynchronizerProps;
 import com.vasimvahabov.stockmarketsimulator.synchorizer.properties.QuoteSynchronizerProps;
 import com.vasimvahabov.stockmarketsimulator.synchorizer.properties.StockSynchronizerProps;
 import lombok.AccessLevel;
@@ -24,6 +25,8 @@ public class ExecutorConfig {
 
     QuoteSynchronizerProps quoteSyncProps;
 
+    CandleSynchronizerProps candleSyncProps;
+
     @Bean(name = "stockScheduledExecutor", destroyMethod = "close")
     public ScheduledExecutorService stockScheduledExecutor() {
         return new ScheduledThreadPoolExecutor(
@@ -36,7 +39,7 @@ public class ExecutorConfig {
     public ScheduledExecutorService quoteScheduledExecutor() {
         return new ScheduledThreadPoolExecutor(
                 quoteSyncProps.getScheduled().webSocket().poolSize(),
-                r -> new Thread(r, QUOTE_SYNC.getThread())
+                new AppThreadFactory(QUOTE_SYNC)
         );
     }
 
@@ -47,7 +50,28 @@ public class ExecutorConfig {
                 quoteSyncProps.getPoolSize(),
                 quoteSyncProps.getAliveTime(),
                 quoteSyncProps.getAliveUnit(),
-                new LinkedBlockingQueue<>(quoteSyncProps.getQueueBound())
+                new LinkedBlockingQueue<>(quoteSyncProps.getQueueBound()),
+                new AppThreadFactory(QUOTE_SYNC)
+        );
+    }
+
+    @Bean(name = "candleScheduledExecutor")
+    public ScheduledExecutorService candleScheduledExecutor() {
+        return new ScheduledThreadPoolExecutor(
+                candleSyncProps.getScheduled().poolSize(),
+                new AppThreadFactory(CANDLE_SYNC)
+        );
+    }
+
+    @Bean(name = "candleExecutor")
+    public ExecutorService candleExecutor() {
+        return new ThreadPoolExecutor(
+                candleSyncProps.getPoolSize(),
+                candleSyncProps.getPoolSize(),
+                candleSyncProps.getAliveTime(),
+                candleSyncProps.getAliveUnit(),
+                new LinkedBlockingQueue<>(candleSyncProps.getQueueBound()),
+                new AppThreadFactory(CANDLE_SYNC)
         );
     }
 

@@ -12,7 +12,9 @@ public enum ExecutorThread {
 
     STOCK_SYNC("stock-sync-thread"),
 
-    QUOTE_SYNC("quote-sync-thread");
+    QUOTE_SYNC("quote-sync-thread"),
+
+    CANDLE_SYNC("candle-sync-thread");
 
     final String thread;
 
