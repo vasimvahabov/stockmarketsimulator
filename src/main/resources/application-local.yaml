@@ -19,6 +19,9 @@ executor:
     scheduled:
       websocket:
         initial-delay: "${QUOTE_SCHED_EXEC_WS_INIT_DELAY:60}"
+  candle:
+    scheduled:
+      initial-delay: "${CANDLE_SCHED_EXEC_INIT_DELAY:5000}"
 #  output:
 #    ansi:
 #      enabled: always

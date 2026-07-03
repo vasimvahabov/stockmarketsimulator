@@ -40,3 +40,12 @@ executor:
         batch-size: "${QUOTE_SCHED_EXEC_WS_BATCH_SIZE:30}"
         batch-delay: "${QUOTE_SCHED_EXEC_WS_BATCH_DELAY:60}"
         batch-unit: "${QUOTE_SCHED_EXEC_WS_BATCH_UNIT:SECONDS}"
+  candle:
+    pool-size: "${CANDLE_EXEC_POOL_SIZE:10}"
+    alive-time: "${CANDLE_EXEC_ALIVE_TIME:5}"
+    alive-unit: "${CANDLE_EXEC_ALIVE_UNIT:MINUTES}"
+    queue-bound: "${CANDLE_EXEC_QUEUE_BOUND:35000}"
+    scheduled:
+      pool-size: "${CANDLE_SCHED_EXEC_POOL_SIZE:1}"
+      period: "${CANDLE_SCHED_EXEC_PERIOD:86400000}"
+      unit: "${CANDLE_SCHED_EXEC_UNIT:MILLISECONDS}"
