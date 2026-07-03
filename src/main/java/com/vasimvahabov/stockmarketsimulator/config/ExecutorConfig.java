@@ -50,4 +50,21 @@ public class ExecutorConfig {
                 new LinkedBlockingQueue<>(quoteSyncProps.getQueueBound())
         );
     }
+
+    private final static class AppUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+        @Override
+        public void uncaughtException(Thread t, Throwable e) {
+            log.error("Uncaught exception in thread '{}': {}", t.getName(), e.getMessage(), e);
+        }
+    }
+
+    public record AppThreadFactory(ExecutorThread executorThread) implements ThreadFactory {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r, executorThread.getThread());
+            thread.setUncaughtExceptionHandler(new AppUncaughtExceptionHandler());
+            return thread;
+        }
+    }
+
 }
