@@ -27,6 +27,7 @@ import static com.vasimvahabov.stockmarketsimulator.constant.Exchange.*;
 public class StockSynchronizer implements ApplicationRunner {
 
     StockService stockService;
+    
     StockSynchronizerProps synchronizerProps;
 
     @Qualifier("stockScheduledExecutor")

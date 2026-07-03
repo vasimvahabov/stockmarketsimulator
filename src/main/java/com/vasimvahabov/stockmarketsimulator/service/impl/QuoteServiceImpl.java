@@ -37,7 +37,6 @@ public class QuoteServiceImpl implements QuoteService {
 
     public void createQuotes(@NonNull List<QuoteWSResponse> wsResponses, @NonNull Map<String, Stock> stocksMap) {
         try {
-            log.info("Starting quote creation process with {} responses", wsResponses.size());
             List<Quote> quotesToCreate = wsResponses
                     .stream()
                     .flatMap(wsResponse -> Optional.ofNullable(wsResponse.data())
@@ -49,8 +48,7 @@ public class QuoteServiceImpl implements QuoteService {
                 log.warn("No quotes to create from {} responses", wsResponses.size());
                 return;
             }
-
-            log.info("Preparing to create {} quotes", quotesToCreate.size());
+            log.info("Creating quotes: {} quotes", quotesToCreate.size());
             List<Quote> savedQuotes = quoteRepository.saveAll(quotesToCreate);
             log.info("Successfully created {} quotes", savedQuotes.size());
         } catch (Exception exception) {
@@ -58,10 +56,6 @@ public class QuoteServiceImpl implements QuoteService {
         }
     }
 
-    @Override
-    public List<Quote> retrieveQuotesSinceTimestampMs(Instant timestampMs) {
-        return Collections.unmodifiableList(quoteRepository.findByTimestampMsGreaterThanEqual(timestampMs));
-    }
 
     @Override
     public Map<Stock, List<Quote>> retrieveQuotesAsMapSinceTimestampMs(Instant timestampMs) {
