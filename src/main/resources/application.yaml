@@ -5,6 +5,16 @@ spring:
     active: "${ACTIVE_PROFILE:local}"
 #  main.allow-bean-definition-overriding: true
 
+  kafka:
+    bootstrap-servers: "localhost:9092"
+
+kafka:
+  topics:
+    quotes-raw:
+      name: "${TOPIC_QUOTES_RAW_NAME:quotes-raw}"
+      partitions: "${TOPIC_QUOTES_RAW_PARTITIONS:3}"
+      replicas: "${TOPIC_QUOTES_RAW_REPLICAS:1}"
+
 finnhub:
   api-key: "${FINNHUB_API_KEY}"
   rest:
