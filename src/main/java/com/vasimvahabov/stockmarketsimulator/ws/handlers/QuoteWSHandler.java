@@ -7,6 +7,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -14,9 +16,11 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+
+import com.vasimvahabov.stockmarketsimulator.config.kafka.KafkaProps.KafkaTopicProp;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -27,21 +31,36 @@ public class QuoteWSHandler extends TextWebSocketHandler {
 
     List<String> batchSymbols;
 
-    Queue<QuoteWSResponse> wsResponses;
+    KafkaTemplate<String, QuoteWSResponse> kafkaTemplate;
 
     CompletableFuture<Void> onCloseFuture;
+
+    KafkaTopicProp topicProp;
 
     @Override
     public void handleTextMessage(@Nonnull WebSocketSession session,
                                   @Nonnull TextMessage message) throws Exception {
-        QuoteWSResponse wsResponse = objectMapper.readValue(message.getPayload(), QuoteWSResponse.class);
-        log.info("Received quote response: {}", wsResponse);
-        wsResponses.offer(wsResponse);
+        QuoteWSResponse response = objectMapper.readValue(message.getPayload(), QuoteWSResponse.class);
+        log.info("Received quote response: {}", response);
+        List<QuoteWSResponse.Data> responseData = response.data();
+
+        if (responseData == null || responseData.isEmpty()) {
+            return;
+        }
+
+        ProducerRecord<String, QuoteWSResponse> record = new ProducerRecord<>(
+                topicProp.name(),
+                null,
+                Instant.now().toEpochMilli(),
+                responseData.getFirst().symbol(),
+                response
+        );
+        kafkaTemplate.send(record);
     }
 
     @Override
     public void afterConnectionEstablished(@Nonnull WebSocketSession session) throws Exception {
-        log.info(
+        log.debug(
                 "Connected to Finnhub WebSocket server at {}",
                 session.getRemoteAddress()
         );
@@ -56,6 +75,7 @@ public class QuoteWSHandler extends TextWebSocketHandler {
                 log.error("Failed to subscribe to {}: {}", symbol, exception.getMessage(), exception);
             }
         });
+
     }
 
     @Override

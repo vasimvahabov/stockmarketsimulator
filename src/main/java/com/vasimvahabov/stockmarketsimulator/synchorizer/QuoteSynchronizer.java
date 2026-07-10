@@ -1,10 +1,10 @@
 package com.vasimvahabov.stockmarketsimulator.synchorizer;
 
 import com.vasimvahabov.stockmarketsimulator.config.FinnhubProps;
+import com.vasimvahabov.stockmarketsimulator.config.kafka.KafkaProps;
 import com.vasimvahabov.stockmarketsimulator.dto.response.QuoteWSResponse;
 import com.vasimvahabov.stockmarketsimulator.entity.Stock;
 import com.vasimvahabov.stockmarketsimulator.synchorizer.properties.QuoteSynchronizerProps;
-import com.vasimvahabov.stockmarketsimulator.service.QuoteService;
 import com.vasimvahabov.stockmarketsimulator.service.StockService;
 import com.vasimvahabov.stockmarketsimulator.ws.handlers.QuoteWSHandler;
 import jakarta.annotation.Nonnull;
@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.WebSocketClient;
@@ -40,18 +41,22 @@ public class QuoteSynchronizer implements ApplicationRunner {
 
     StockService stockService;
 
-    QuoteService quoteService;
+//    QuoteService quoteService;
 
     QuoteSynchronizerProps syncProps;
+
+    KafkaProps kafkaProps;
 
     @Qualifier("quoteWSClient")
     WebSocketClient wsClient;
 
-    @Qualifier("quoteExecutor")
-    ExecutorService executor;
+//    @Qualifier("quoteExecutor")
+//    ExecutorService executor;
 
     @Qualifier("quoteScheduledExecutor")
     ScheduledExecutorService scheduledExecutor;
+
+    KafkaTemplate<String, QuoteWSResponse> kafkaTemplate;
 
     @Override
     public void run(@Nonnull ApplicationArguments args) throws Exception {
@@ -109,13 +114,19 @@ public class QuoteSynchronizer implements ApplicationRunner {
                                    Map<String, Stock> stocksMap,
                                    FinnhubProps.WebSocket finnhubWSProps,
                                    QuoteSynchronizerProps.WebSocket wsSyncProps) {
-        Queue<QuoteWSResponse> wsResponses = new ConcurrentLinkedQueue<>();
         CompletableFuture<Void> connectionCloseFuture = new CompletableFuture<>();
 
-        CompletableFuture<WebSocketSession> sessionFuture = wsClient.execute(
-                new QuoteWSHandler(objectMapper, batchSymbols, wsResponses, connectionCloseFuture),
-                buildWebSocketUri(finnhubWSProps)
-        ).orTimeout(finnhubWSProps.timeout(), finnhubWSProps.timeoutUnit());
+        QuoteWSHandler wsHandler = new QuoteWSHandler(
+                objectMapper,
+                batchSymbols,
+                kafkaTemplate,
+                connectionCloseFuture,
+                kafkaProps.getTopics().quotesRaw()
+        );
+
+        CompletableFuture<WebSocketSession> sessionFuture = wsClient
+                .execute(wsHandler, buildWebSocketUri(finnhubWSProps))
+                .orTimeout(finnhubWSProps.timeout(), finnhubWSProps.timeoutUnit());
 
         sessionFuture.whenComplete((_, throwable) -> {
             if (throwable != null) {
@@ -145,11 +156,12 @@ public class QuoteSynchronizer implements ApplicationRunner {
         long closeTimeoutMs = wsSyncProps.sessionDurationInMillis() + wsSyncProps.closeGracePeriodInMillis();
         connectionCloseFuture
                 .orTimeout(closeTimeoutMs, TimeUnit.MILLISECONDS)
-                .thenRunAsync(
-                        () -> quoteService.createQuotes(List.copyOf(wsResponses), stocksMap), executor
-                ).whenComplete((_, throwable) -> {
+//                .thenRunAsync(
+//                        () -> quoteService.createQuotes(List.copyOf(wsResponses), stocksMap), executor
+//                )
+                .whenComplete((_, throwable) -> {
                     if (throwable == null) {
-                        log.info("Closed Finnhub WebSocket connection gracefully");
+                        log.debug("Closed Finnhub WebSocket connection gracefully");
                     } else {
                         log.error(
                                 "Finnhub WebSocket session aborted due to an upstream failure: {}",
