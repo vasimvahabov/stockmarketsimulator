@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 public final class CompletableFutureUtils {
 
@@ -35,6 +36,18 @@ public final class CompletableFutureUtils {
                 return;
             }
             log.debug("{}", successMessage);
+        };
+    }
+
+    public static <T> BiConsumer<T, Throwable> logCompletion(
+            Logger log, Supplier<String> successMessage, Supplier<String> failureMessage
+    ) {
+        return (_, throwable) -> {
+            if (throwable != null) {
+                log.error("{}: {}", failureMessage.get(), throwable.getMessage(), throwable);
+                return;
+            }
+            log.debug("{}", successMessage.get());
         };
     }
 
