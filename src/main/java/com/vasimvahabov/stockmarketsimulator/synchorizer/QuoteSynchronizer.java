@@ -137,7 +137,7 @@ public class QuoteSynchronizer implements ApplicationRunner {
 
     private void unsubscribe(WebSocketSession wsSession, CompletableFuture<Void> connectionCloseFuture) {
         try {
-            wsSession.close(CloseStatus.NORMAL);
+            wsSession.close(CloseStatus.GOING_AWAY.withReason("Client unsubscribed from quote updates"));
         } catch (Exception exception) {
             connectionCloseFuture.completeExceptionally(exception);
             log.error("Failed to close WebSocket session {}", exception.getMessage(), exception);
