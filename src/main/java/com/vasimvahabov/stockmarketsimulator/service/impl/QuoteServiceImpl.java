@@ -2,15 +2,11 @@ package com.vasimvahabov.stockmarketsimulator.service.impl;
 
 import com.vasimvahabov.stockmarketsimulator.dto.response.QuoteWSResponse;
 import com.vasimvahabov.stockmarketsimulator.entity.Quote;
-import com.vasimvahabov.stockmarketsimulator.entity.Quote_;
 import com.vasimvahabov.stockmarketsimulator.entity.Stock;
 import com.vasimvahabov.stockmarketsimulator.mapper.QuoteMapper;
 import com.vasimvahabov.stockmarketsimulator.repository.QuoteRepository;
 import com.vasimvahabov.stockmarketsimulator.service.QuoteService;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
+import com.vasimvahabov.stockmarketsimulator.service.StockService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -32,8 +27,6 @@ public class QuoteServiceImpl implements QuoteService {
     QuoteRepository quoteRepository;
 
     QuoteMapper quoteMapper;
-
-    EntityManager entityManager;
 
     public void createQuotes(@NonNull List<QuoteWSResponse> wsResponses, @NonNull Map<String, Stock> stocksMap) {
         try {
@@ -58,28 +51,18 @@ public class QuoteServiceImpl implements QuoteService {
 
 
     @Override
-    public Map<Stock, List<Quote>> retrieveQuotesAsMapSinceTimestampMs(Instant timestampMs) {
+    public Map<Stock, List<Quote>> findQuotesGroupedByStockSince(Instant timestampMs) {
         log.info("Retrieving quotes since timestamp: {}", timestampMs);
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Quote> query = builder.createQuery(Quote.class);
-        Root<Quote> root = query.from(Quote.class);
-        query.select(root);
-        query.where(builder.greaterThanOrEqualTo(root.get(Quote_.TIMESTAMP_MS), timestampMs));
-        Map<Stock, List<Quote>> quotesMap = entityManager.createQuery(query)
-                .getResultList()
+        Map<Stock, List<Quote>> quotes = quoteRepository
+                .findAllByTimestampMsGreaterThanEqual(timestampMs)
                 .stream()
                 .collect(Collectors.collectingAndThen(
-                        Collectors.groupingByConcurrent(
-                                Quote::getStock,
-                                Collectors.mapping(
-                                        Function.identity(),
-                                        Collectors.toUnmodifiableList()
-                                )
-                        ),
+                        Collectors.groupingBy(Quote::getStock, Collectors.toUnmodifiableList()),
                         Collections::unmodifiableMap
                 ));
+
         log.info("Retrieved quotes successfully since timestamp: {}", timestampMs);
-        return quotesMap;
+        return quotes;
     }
 
 }

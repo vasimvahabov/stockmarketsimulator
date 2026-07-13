@@ -13,6 +13,6 @@ public interface QuoteService {
 
     void createQuotes(@Nonnull List<QuoteWSResponse> wsResponses, @Nonnull Map<String, Stock> stocksMap);
 
-    Map<Stock, List<Quote>> retrieveQuotesAsMapSinceTimestampMs(Instant timestampMs);
+    Map<Stock, List<Quote>> findQuotesGroupedByStockSince(Instant timestampMs);
 
 }

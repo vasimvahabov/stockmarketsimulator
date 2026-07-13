@@ -17,7 +17,6 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -58,7 +57,7 @@ public class CandleSynchronizer implements ApplicationRunner {
     private void startDailySynchronization() {
         try {
             Instant yesterday = yesterday();
-            Map<Stock, List<Quote>> quotesSinceYesterday = quoteService.retrieveQuotesAsMapSinceTimestampMs(yesterday);
+            Map<Stock, List<Quote>> quotesSinceYesterday = quoteService.findQuotesGroupedByStockSince(yesterday);
             List<CompletableFuture<Optional<Candle>>> candleFutures = quotesSinceYesterday
                     .entrySet()
                     .stream()
