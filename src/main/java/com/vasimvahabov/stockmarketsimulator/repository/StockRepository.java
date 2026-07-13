@@ -10,6 +10,6 @@ import java.util.List;
 @Repository
 public interface StockRepository extends JpaRepository<Stock, Long> {
 
-    List<Stock> findByExchange(Exchange exchange);
+    List<Stock> findAllByExchange(Exchange exchange);
 
 }

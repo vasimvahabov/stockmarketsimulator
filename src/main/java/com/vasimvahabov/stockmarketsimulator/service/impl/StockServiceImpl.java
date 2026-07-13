@@ -5,10 +5,6 @@ import com.vasimvahabov.stockmarketsimulator.dto.response.StockResponse;
 import com.vasimvahabov.stockmarketsimulator.entity.Stock;
 import com.vasimvahabov.stockmarketsimulator.mapper.StockMapper;
 import com.vasimvahabov.stockmarketsimulator.service.StockService;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -38,14 +34,13 @@ public class StockServiceImpl implements StockService {
 
     StockRepository stockRepository;
 
-    EntityManager entityManager;
 
     @Override
     @Transactional
     public void synchronizeByExchange(Exchange exchange) {
         log.info("Synchronizing stocks for exchange {}", exchange);
         Map<String, Stock> stocksBySymbol = stockRepository
-                .findByExchange(exchange)
+                .findAllByExchange(exchange)
                 .stream()
                 .collect(Collectors.toMap(
                         Stock::getSymbol,
@@ -68,13 +63,8 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public Map<String, Stock> retrieveStocksAsMap() {
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<Stock> query = builder.createQuery(Stock.class);
-        Root<Stock> root = query.from(Stock.class);
-        query.select(root);
-        return entityManager.createQuery(query)
-                .getResultList()
+    public Map<String, Stock> findStocks() {
+        return stockRepository.findAll()
                 .stream()
                 .collect(Collectors.toUnmodifiableMap(
                         Stock::getSymbol, Function.identity()

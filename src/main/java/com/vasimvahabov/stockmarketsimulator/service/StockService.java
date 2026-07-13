@@ -9,6 +9,6 @@ public interface StockService {
 
     void synchronizeByExchange(Exchange exchange);
 
-    Map<String, Stock> retrieveStocksAsMap();
+    Map<String, Stock> findStocks();
 
 }
