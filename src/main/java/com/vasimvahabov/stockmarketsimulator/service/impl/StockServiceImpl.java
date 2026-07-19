@@ -71,6 +71,16 @@ public class StockServiceImpl implements StockService {
                 ));
     }
 
+    @Override
+    public Map<String, Stock> findStocksBySymbols(List<String> symbols) {
+        return stockRepository.findAllBySymbolIn(symbols)
+                .stream()
+                .collect(Collectors.toUnmodifiableMap(
+                        Stock::getSymbol,
+                        Function.identity()
+                ));
+    }
+
     private List<StockResponse> fetchByExchange(Exchange exchange) {
         var uri = String.format("/stock/symbol?exchange=%s", exchange.getCode());
         log.info("Fetching stocks for exchange {} with uri {}", exchange.getCode(), uri);
