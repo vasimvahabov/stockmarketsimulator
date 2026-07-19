@@ -1,7 +1,7 @@
 package com.vasimvahabov.stockmarketsimulator.config.kafka;
 
 import jakarta.annotation.Nonnull;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class KafkaProps {
 
-    @NotEmpty
+    @NotNull
     KafkaTopicProps topics;
 
     public record KafkaTopicProps(
@@ -25,8 +25,16 @@ public class KafkaProps {
     public record KafkaTopicProp(
             @Nonnull String name,
             int partitions,
-            int replicas
+            int replicas,
+            @NotNull KafkaConsumerProp consumer
     ) {
+    }
+
+    public record KafkaConsumerProp(
+            @Nonnull String groupId,
+            @Nonnull String clientIdPrefix
+    ) {
+
     }
 
 }

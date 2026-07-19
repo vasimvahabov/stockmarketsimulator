@@ -23,6 +23,9 @@ kafka:
       name: "${TOPIC_QUOTES_RAW_NAME:quotes-raw}"
       partitions: "${TOPIC_QUOTES_RAW_PARTITIONS:3}"
       replicas: "${TOPIC_QUOTES_RAW_REPLICAS:1}"
+      consumer:
+        group-id: "${TOPIC_QUOTES_RAW_CONSUMER_GROUP_ID:quote-raw-consumer-group}"
+        client-id-prefix: "${TOPIC_QUOTES_RAW_CLIENT_ID_PREFIX:quote-raw-consumer-client}"
 
 finnhub:
   api-key: "${FINNHUB_API_KEY}"
