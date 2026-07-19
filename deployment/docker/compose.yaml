@@ -28,6 +28,8 @@ services:
 volumes:
   pg-data:
     name: stock-market-simulator
+  kafka-data:
+    name: kafka-data
 
 networks:
   stock-market-simulator:
