@@ -6,7 +6,7 @@ import com.vasimvahabov.stockmarketsimulator.dto.response.QuoteWSResponse;
 import com.vasimvahabov.stockmarketsimulator.entity.Stock;
 import com.vasimvahabov.stockmarketsimulator.synchorizer.properties.QuoteSynchronizerProps;
 import com.vasimvahabov.stockmarketsimulator.service.StockService;
-import com.vasimvahabov.stockmarketsimulator.ws.handlers.QuoteWSHandler;
+import com.vasimvahabov.stockmarketsimulator.synchorizer.websocket.QuoteWSHandler;
 import jakarta.annotation.Nonnull;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
