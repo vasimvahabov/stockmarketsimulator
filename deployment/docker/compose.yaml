@@ -14,6 +14,17 @@ services:
     networks:
       - stock-market-simulator
 
+  kafka:
+    image: apache/kafka:4.3.1
+    pull_policy: missing
+    container_name: kafka
+    ports:
+      - 9092:9092
+    volumes:
+      - kafka-data:/tmp
+    networks:
+      - stock-market-simulator
+
 volumes:
   pg-data:
     name: stock-market-simulator
