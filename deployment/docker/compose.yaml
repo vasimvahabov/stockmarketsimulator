@@ -1,37 +1,37 @@
 services:
   postgres:
-    image: postgres:18.1
-    pull_policy: missing
-    container_name: postgres
+    image: "postgres:18.1"
+    pull_policy: "missing"
+    container_name: "postgres"
     ports:
-      - 5432:5432
+      - "5432:5432"
     environment:
-      POSTGRES_USER: 'usr_admin'
-      POSTGRES_PASSWORD: 'pwd_admin'
-      POSTGRES_DB: 'postgres'
+      POSTGRES_USER: "usr_admin"
+      POSTGRES_PASSWORD: "pwd_admin"
+      POSTGRES_DB: "postgres"
     volumes:
-      - pg-data:/var/lib/postgresql
+      - "pg-data:/var/lib/postgresql"
     networks:
-      - stock-market-simulator
+      - "stock-market-simulator"
 
   kafka:
-    image: apache/kafka:4.3.1
-    pull_policy: missing
-    container_name: kafka
+    image: "apache/kafka:4.3.1"
+    pull_policy: "missing"
+    container_name: "kafka"
     ports:
-      - 9092:9092
+      - "9092:9092"
     volumes:
-      - kafka-data:/tmp
+      - "kafka-data:/tmp"
     networks:
-      - stock-market-simulator
+      - "stock-market-simulator"
 
 volumes:
   pg-data:
-    name: stock-market-simulator
+    name: "stock-market-simulator"
   kafka-data:
-    name: kafka-data
+    name: "kafka-data"
 
 networks:
   stock-market-simulator:
-    name: stock-market-simulator
-    driver: bridge
+    name: "stock-market-simulator"
+    driver: "bridge"
