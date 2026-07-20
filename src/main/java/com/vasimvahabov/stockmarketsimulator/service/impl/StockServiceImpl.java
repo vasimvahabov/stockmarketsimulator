@@ -9,11 +9,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 import com.vasimvahabov.stockmarketsimulator.repository.StockRepository;
 
 import java.util.List;
@@ -28,29 +24,18 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class StockServiceImpl implements StockService {
 
-    RestClient restClient;
-
     StockMapper stockMapper;
 
     StockRepository stockRepository;
 
-
     @Override
-    @Transactional
-    public void synchronizeByExchange(Exchange exchange) {
-        log.info("Synchronizing stocks for exchange {}", exchange);
-        Map<String, Stock> stocksBySymbol = stockRepository
-                .findAllByExchange(exchange)
-                .stream()
-                .collect(Collectors.toMap(
-                        Stock::getSymbol,
-                        Function.identity()
-                ));
+    public void createStocks(Exchange exchange, List<StockResponse> responses) {
+        Map<String, Stock> stockMap = findStocks();
 
-        List<Stock> stocksToSave = fetchByExchange(exchange)
+        List<Stock> stocksToSave = responses
                 .stream()
                 .map(response ->
-                        Optional.ofNullable(stocksBySymbol.get(response.symbol()))
+                        Optional.ofNullable(stockMap.get(response.symbol()))
                                 .map(stock -> stockMapper.responseToEntity(stock, response))
                                 .orElse(stockMapper.responseToEntity(response, exchange))
                 )
@@ -59,7 +44,6 @@ public class StockServiceImpl implements StockService {
             stockRepository.saveAll(stocksToSave);
             log.info("Persisted {} stocks for exchange {}", stocksToSave.size(), exchange);
         }
-        log.info("Stocks for exchange {} synchronized", exchange.getCode());
     }
 
     @Override
@@ -79,24 +63,6 @@ public class StockServiceImpl implements StockService {
                         Stock::getSymbol,
                         Function.identity()
                 ));
-    }
-
-    private List<StockResponse> fetchByExchange(Exchange exchange) {
-        var uri = String.format("/stock/symbol?exchange=%s", exchange.getCode());
-        log.info("Fetching stocks for exchange {} with uri {}", exchange.getCode(), uri);
-
-        var stocks = restClient.get()
-                .uri(uri)
-                .exchange((_, response) -> {
-                    if (!response.getStatusCode().isError()) {
-                        return response.bodyTo(new ParameterizedTypeReference<List<StockResponse>>() {
-                        });
-                    }
-                    throw new RestClientException("Exception occurred: %s".formatted(response.getStatusText()));
-                });
-
-        log.info("Fetched {} stocks for currency {} with uri {}", stocks.size(), exchange.getCode(), uri);
-        return stocks;
     }
 
 }
