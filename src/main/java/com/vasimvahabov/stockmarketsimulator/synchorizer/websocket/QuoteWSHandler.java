@@ -43,11 +43,10 @@ public class QuoteWSHandler extends TextWebSocketHandler {
                                   @Nonnull TextMessage message) throws Exception {
         QuoteWSResponse response = objectMapper.readValue(message.getPayload(), QuoteWSResponse.class);
         log.info("Received quote response: {}", response);
-//        List<QuoteWSResponse.Data> responseData = response.data();
-//
-//        if (responseData == null || responseData.isEmpty()) {
-//            return;
-//        }
+
+        if (response.data() == null || response.data().isEmpty()) {
+            return;
+        }
 
         ProducerRecord<String, QuoteWSResponse> record = new ProducerRecord<>(
                 topicProp.name(),
