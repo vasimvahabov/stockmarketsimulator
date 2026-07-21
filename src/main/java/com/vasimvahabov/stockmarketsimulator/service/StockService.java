@@ -11,7 +11,7 @@ public interface StockService {
 
     void createStocks(Exchange exchange, List<StockResponse> responses);
 
-    Map<String, Stock> findStocks();
+    Map<String, Stock> findStocksMap();
 
     Map<String, Stock> findStocksBySymbols(List<String> symbols);
 

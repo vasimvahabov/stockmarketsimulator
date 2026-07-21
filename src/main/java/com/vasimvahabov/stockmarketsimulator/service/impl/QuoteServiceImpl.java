@@ -34,7 +34,7 @@ public class QuoteServiceImpl implements QuoteService {
     @Override
     public void createQuotes(@NonNull List<ConsumerRecord<String, QuoteWSResponse>> records) {
         try {
-            Map<String, Stock> stockMap = stockService.findStocks();
+            Map<String, Stock> stockMap = stockService.findStocksMap();
             List<Quote> quotes = records.stream()
                     .filter(record -> record.value().data()!=null)
                     .flatMap(record -> record.value().data().stream())

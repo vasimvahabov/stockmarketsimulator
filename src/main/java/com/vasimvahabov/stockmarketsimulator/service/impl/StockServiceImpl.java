@@ -30,7 +30,7 @@ public class StockServiceImpl implements StockService {
 
     @Override
     public void createStocks(Exchange exchange, List<StockResponse> responses) {
-        Map<String, Stock> stockMap = findStocks();
+        Map<String, Stock> stockMap = findStocksMap();
 
         List<Stock> stocksToSave = responses
                 .stream()
@@ -47,7 +47,7 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public Map<String, Stock> findStocks() {
+    public Map<String, Stock> findStocksMap() {
         return stockRepository.findAll()
                 .stream()
                 .collect(Collectors.toUnmodifiableMap(
