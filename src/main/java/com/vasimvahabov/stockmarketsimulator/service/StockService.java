@@ -13,6 +13,8 @@ public interface StockService {
 
     Map<String, Stock> findStocksMap();
 
+    List<Stock> findStocksList();
+
     Map<String, Stock> findStocksBySymbols(List<String> symbols);
 
 }

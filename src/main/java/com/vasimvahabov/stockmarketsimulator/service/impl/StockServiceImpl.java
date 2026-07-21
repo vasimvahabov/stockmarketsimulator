@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import com.vasimvahabov.stockmarketsimulator.repository.StockRepository;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,6 +54,11 @@ public class StockServiceImpl implements StockService {
                 .collect(Collectors.toUnmodifiableMap(
                         Stock::getSymbol, Function.identity()
                 ));
+    }
+
+    @Override
+    public List<Stock> findStocksList() {
+        return Collections.unmodifiableList(stockRepository.findAll());
     }
 
     @Override
