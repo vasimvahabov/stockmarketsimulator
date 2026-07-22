@@ -140,6 +140,13 @@ public class QuoteSynchronizer implements ApplicationRunner {
                             .collect(Collectors.toUnmodifiableList());
 
                     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+                    checkpointService.saveQuotePublishCheckpoint(
+                            QuotePublishCheckpoint
+                                    .builder()
+                                    .source("finnhub")
+                                    .lastPublishedStockId(batchStocks.getLast().getId())
+                                    .lastPublishedAt(Instant.now()).build()
+                    );
                     log.info("Finnhub WebSocket connection closed gracefully");
                 });
     }
