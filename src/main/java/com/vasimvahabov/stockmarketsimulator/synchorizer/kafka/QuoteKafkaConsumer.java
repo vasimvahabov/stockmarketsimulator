@@ -23,8 +23,10 @@ public class QuoteKafkaConsumer {
     @KafkaListener(
             clientIdPrefix = "${kafka.topics.quotes-raw.consumer.client-id-prefix}",
             groupId = "${kafka.topics.quotes-raw.consumer.group-id}",
+            topics = "${kafka.topics.quotes-raw.name}",
             batch = "true",
-            ackMode = "BATCH"
+            ackMode = "BATCH",
+            concurrency = "${kafka.topics.quotes-raw.partitions}"
     )
     public void consume(List<ConsumerRecord<String, QuoteWSResponse>> records) {
         try {
