@@ -12,6 +12,8 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
 
     List<Stock> findAllByExchange(Exchange exchange);
 
+    List<Stock> findAllByIdGreaterThan(Long id);
+
     List<Stock> findAllBySymbolIn(List<String> symbols);
 
 }
