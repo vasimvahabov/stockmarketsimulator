@@ -3,7 +3,9 @@ package com.vasimvahabov.stockmarketsimulator.synchorizer;
 import com.vasimvahabov.stockmarketsimulator.config.FinnhubProps;
 import com.vasimvahabov.stockmarketsimulator.config.kafka.KafkaProps;
 import com.vasimvahabov.stockmarketsimulator.dto.response.QuoteWSResponse;
+import com.vasimvahabov.stockmarketsimulator.entity.QuotePublishCheckpoint;
 import com.vasimvahabov.stockmarketsimulator.entity.Stock;
+import com.vasimvahabov.stockmarketsimulator.service.QuotePublishCheckpointService;
 import com.vasimvahabov.stockmarketsimulator.synchorizer.properties.QuoteSynchronizerProps;
 import com.vasimvahabov.stockmarketsimulator.service.StockService;
 import com.vasimvahabov.stockmarketsimulator.synchorizer.websocket.QuoteWSHandler;
@@ -12,26 +14,29 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.vasimvahabov.stockmarketsimulator.util.DateTimeUtils.*;
 import static com.vasimvahabov.stockmarketsimulator.util.CompletableFutureUtils.*;
 
 @Slf4j
-@Configuration
+@Component
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class QuoteSynchronizer implements ApplicationRunner {
@@ -54,6 +59,8 @@ public class QuoteSynchronizer implements ApplicationRunner {
 
     KafkaTemplate<String, QuoteWSResponse> kafkaTemplate;
 
+    QuotePublishCheckpointService checkpointService;
+
     @Override
     public void run(@Nonnull ApplicationArguments args) throws Exception {
         QuoteSynchronizerProps.WebSocket wsSyncProps = syncProps.getScheduled().webSocket();
@@ -71,61 +78,70 @@ public class QuoteSynchronizer implements ApplicationRunner {
     private void startSynchronization(QuoteSynchronizerProps.WebSocket wsSyncProps) {
         FinnhubProps.WebSocket wsFinnhubProps = finnhubProps.getWebsocket();
 
-        Map<String, Stock> stocksMap = stockService.findStocksMap();
-        List<String> symbols = List.copyOf(stocksMap.keySet());
-        IntStream.iterate(0, i -> i < symbols.size(), i -> i + wsSyncProps.batchSize()).forEach(start -> {
-            int end = Math.min(start + wsSyncProps.batchSize(), symbols.size());
+        List<Stock> stocks = stockService.findStocksList();
+        IntStream.iterate(0, i -> i < stocks.size(), i -> i + wsSyncProps.batchSize()).forEach(start -> {
+            int end = Math.min(start + wsSyncProps.batchSize(), stocks.size());
             int batchIndex = start / wsSyncProps.batchSize();
             long delay = batchIndex * wsSyncProps.batchDelay();
 
-            List<String> batchSymbols = symbols.subList(start, end);
+            List<Stock> batchStocks = stocks.subList(start, end);
             Executor delayedExecutor = CompletableFuture.delayedExecutor(delay, wsSyncProps.batchUnit(), scheduledExecutor);
 
             CompletableFuture.runAsync(
-                    () -> subscribeToQuotes(batchSymbols, wsFinnhubProps, wsSyncProps),
+                    () -> subscribeToQuotes(batchStocks, wsFinnhubProps, wsSyncProps),
                     delayedExecutor
             ).whenComplete(logFailure(log, "Failed to process batch"));
         });
     }
 
-    private void subscribeToQuotes(List<String> batchSymbols,
+    private void subscribeToQuotes(List<Stock> batchStocks,
                                    FinnhubProps.WebSocket finnhubWSProps,
                                    QuoteSynchronizerProps.WebSocket wsSyncProps) {
-        CompletableFuture<Void> sessionClosedFuture = new CompletableFuture<>();
+        CompletableFuture<Void> sessionCompletionFuture = new CompletableFuture<>();
+        List<String> batchSymbols = batchStocks.stream().map(Stock::getSymbol).toList();
 
+        Queue<ProducerRecord<String, QuoteWSResponse>> producerRecords = new ConcurrentLinkedQueue<>();
         CompletableFuture<WebSocketSession> sessionFuture = wsClient
                 .execute(new QuoteWSHandler(
-                                objectMapper,
+                                kafkaProps.getTopics().quotesRaw().name(),
                                 batchSymbols,
-                                kafkaTemplate,
-                                sessionClosedFuture,
-                                kafkaProps.getTopics().quotesRaw()
+                                objectMapper,
+                                producerRecords,
+                                sessionCompletionFuture
                         ), buildWebSocketUri(finnhubWSProps)
                 ).orTimeout(finnhubWSProps.timeout(), finnhubWSProps.timeoutUnit());
 
         sessionFuture.whenComplete(logFailureAndCompleteExceptionally(
-                log, "Failed to connect to Finnhub WebSocket server", sessionClosedFuture
+                log, "Failed to connect to Finnhub WebSocket server", sessionCompletionFuture
         ));
 
         sessionFuture.thenAcceptAsync(
-                wsSession -> unsubscribe(wsSession, sessionClosedFuture),
+                wsSession -> closeSession(wsSession, sessionCompletionFuture),
                 CompletableFuture.delayedExecutor(
                         wsSyncProps.sessionDuration(),
                         wsSyncProps.sessionUnit(),
                         scheduledExecutor
                 )
         ).whenComplete(logFailureAndCompleteExceptionally(
-                log, "Failed to schedule unsubscribe", sessionClosedFuture
+                log, "Failed to schedule close session", sessionCompletionFuture
         ));
 
         long closeTimeoutMs = wsSyncProps.sessionDurationInMillis() + wsSyncProps.closeGracePeriodInMillis();
-        sessionClosedFuture
+        sessionCompletionFuture
                 .orTimeout(closeTimeoutMs, TimeUnit.MILLISECONDS)
-                .whenComplete(logCompletion(
-                        log,
-                        "Closed Finnhub WebSocket connection gracefully",
-                        "Finnhub WebSocket session aborted due to an upstream failure"
-                ));
+                .whenComplete((_, throwable) -> {
+                    if (throwable != null) {
+                        log.info("Finnhub WebSocket session aborted due to an upstream failure : {}",
+                                throwable.getMessage(), throwable);
+                        return;
+                    }
+                    List<CompletableFuture<?>> futures = producerRecords.stream()
+                            .map(kafkaTemplate::send)
+                            .collect(Collectors.toUnmodifiableList());
+
+                    CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+                    log.info("Finnhub WebSocket connection closed gracefully");
+                });
     }
 
     private String buildWebSocketUri(FinnhubProps.WebSocket wsProps) {
@@ -135,9 +151,9 @@ public class QuoteSynchronizer implements ApplicationRunner {
                 .toUriString();
     }
 
-    private void unsubscribe(WebSocketSession wsSession, CompletableFuture<Void> connectionCloseFuture) {
+    private void closeSession(WebSocketSession wsSession, CompletableFuture<Void> connectionCloseFuture) {
         try {
-            wsSession.close(CloseStatus.GOING_AWAY.withReason("Client unsubscribed from quote updates"));
+            wsSession.close(CloseStatus.GOING_AWAY.withReason("Client disconnected from quote updates"));
         } catch (Exception exception) {
             connectionCloseFuture.completeExceptionally(exception);
             log.error("Failed to close WebSocket session {}", exception.getMessage(), exception);

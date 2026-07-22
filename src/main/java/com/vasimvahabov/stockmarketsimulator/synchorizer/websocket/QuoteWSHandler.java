@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -17,45 +16,48 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
-
-import com.vasimvahabov.stockmarketsimulator.config.kafka.KafkaProps.KafkaTopicProp;
 
 @Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class QuoteWSHandler extends TextWebSocketHandler {
 
-    ObjectMapper objectMapper;
+    String kafkaTopic;
 
     List<String> batchSymbols;
 
-    KafkaTemplate<String, QuoteWSResponse> kafkaTemplate;
+    ObjectMapper objectMapper;
 
-    CompletableFuture<Void> onCloseFuture;
+    Queue<ProducerRecord<String, QuoteWSResponse>> producerRecords;
 
-    KafkaTopicProp topicProp;
+    CompletableFuture<Void> sessionCompletionFuture;
 
     @Override
     public void handleTextMessage(@Nonnull WebSocketSession session,
                                   @Nonnull TextMessage message) throws Exception {
-        QuoteWSResponse response = objectMapper.readValue(message.getPayload(), QuoteWSResponse.class);
-        log.info("Received quote response: {}", response);
+        try {
+            QuoteWSResponse response = objectMapper.readValue(message.getPayload(), QuoteWSResponse.class);
+            log.info("Received quote response: {}", response);
 
-        if (response.data() == null || response.data().isEmpty()) {
-            return;
+            if (response.data() == null || response.data().isEmpty()) {
+                return;
+            }
+
+            producerRecords.add(
+                    new ProducerRecord<>(
+                            kafkaTopic,
+                            null,
+                            Instant.now().toEpochMilli(),
+                            response.data().getFirst().symbol(),
+                            response
+                    )
+            );
+        } catch (Exception exception) {
+            log.error("Exception on handling Finnhub text message: {}", exception.getMessage(), exception);
         }
-
-        ProducerRecord<String, QuoteWSResponse> record = new ProducerRecord<>(
-                topicProp.name(),
-                null,
-                Instant.now().toEpochMilli(),
-                "symbol",
-                response
-        );
-        kafkaTemplate.send(record);
     }
 
     @Override
@@ -75,22 +77,13 @@ public class QuoteWSHandler extends TextWebSocketHandler {
                 log.error("Failed to subscribe to {}: {}", symbol, exception.getMessage(), exception);
             }
         });
-        ProducerRecord<String, QuoteWSResponse> record = new ProducerRecord<>(
-                topicProp.name(),
-                null,
-                Instant.now().toEpochMilli(),
-                "symbol",
-                new QuoteWSResponse("type", Collections.emptyList())
-        );
-        kafkaTemplate.send(record);
-
     }
 
     @Override
     public void afterConnectionClosed(@Nonnull WebSocketSession session,
                                       @Nonnull CloseStatus status) {
         log.info("Finnhub WebSocket closed [code={}, reason={}]", status.getCode(), status.getReason());
-        onCloseFuture.complete(null);
+        sessionCompletionFuture.complete(null);
     }
 
 }
