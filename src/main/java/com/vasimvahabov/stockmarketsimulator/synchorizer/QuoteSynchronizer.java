@@ -81,7 +81,11 @@ public class QuoteSynchronizer implements ApplicationRunner {
     private void startSynchronization(QuoteSynchronizerProps.WebSocket wsSyncProps) {
         FinnhubProps.WebSocket wsFinnhubProps = finnhubProps.getWebsocket();
 
-        List<Stock> stocks = stockService.findStocksList();
+        QuotePublishCheckpoint checkpoint = checkpointService.findByDataSource(DATA_SOURCE);
+        Long lastPublishedStockId = checkpoint.getLastPublishedStockId();
+        log.info("Starting quote synchronization from stock ID {}", checkpoint.getLastPublishedStockId());
+
+        List<Stock> stocks = stockService.findStocksAfterId(lastPublishedStockId);
         IntStream.iterate(0, i -> i < stocks.size(), i -> i + wsSyncProps.batchSize()).forEach(start -> {
             int end = Math.min(start + wsSyncProps.batchSize(), stocks.size());
             int batchIndex = start / wsSyncProps.batchSize();
