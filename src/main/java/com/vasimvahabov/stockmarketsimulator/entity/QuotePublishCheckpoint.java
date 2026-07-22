@@ -17,8 +17,8 @@ import java.time.Instant;
 public class QuotePublishCheckpoint {
 
     @Id
-    @Column(name = "source")
-    String source;
+    @Column(name = "data_source")
+    Integer dataSource;
 
     @Column(name = "last_published_stock_id")
     Long lastPublishedStockId;

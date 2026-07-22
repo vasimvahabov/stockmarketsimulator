@@ -19,9 +19,9 @@ public class QuotePublishCheckpointServiceImpl implements QuotePublishCheckpoint
 
     @Override
     public void saveQuotePublishCheckpoint(QuotePublishCheckpoint checkpoint) {
-        log.info("Saving {} quote publish checkpoint", checkpoint.getSource());
+        log.info("Saving {} quote publish checkpoint", checkpoint.getDataSource());
         checkpointRepository.save(checkpoint);
-        log.info("Successfully saved {} quote publish checkpoint", checkpoint.getSource());
+        log.info("Successfully saved {} quote publish checkpoint", checkpoint.getDataSource());
     }
 
 }

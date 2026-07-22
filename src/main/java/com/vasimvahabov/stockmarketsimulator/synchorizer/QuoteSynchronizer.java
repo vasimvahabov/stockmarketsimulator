@@ -2,6 +2,7 @@ package com.vasimvahabov.stockmarketsimulator.synchorizer;
 
 import com.vasimvahabov.stockmarketsimulator.config.FinnhubProps;
 import com.vasimvahabov.stockmarketsimulator.config.kafka.KafkaProps;
+import com.vasimvahabov.stockmarketsimulator.constant.StockDataSource;
 import com.vasimvahabov.stockmarketsimulator.dto.response.QuoteWSResponse;
 import com.vasimvahabov.stockmarketsimulator.entity.QuotePublishCheckpoint;
 import com.vasimvahabov.stockmarketsimulator.entity.Stock;
@@ -60,6 +61,8 @@ public class QuoteSynchronizer implements ApplicationRunner {
     KafkaTemplate<String, QuoteWSResponse> kafkaTemplate;
 
     QuotePublishCheckpointService checkpointService;
+
+    Integer DATA_SOURCE = StockDataSource.FINNHUB.getId();
 
     @Override
     public void run(@Nonnull ApplicationArguments args) throws Exception {
@@ -146,7 +149,7 @@ public class QuoteSynchronizer implements ApplicationRunner {
                     checkpointService.saveQuotePublishCheckpoint(
                             QuotePublishCheckpoint
                                     .builder()
-                                    .source("finnhub")
+                                    .dataSource(DATA_SOURCE)
                                     .lastPublishedStockId(batchStocks.getLast().getId())
                                     .lastPublishedAt(Instant.now()).build()
                     );
