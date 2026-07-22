@@ -15,6 +15,8 @@ public interface StockService {
 
     List<Stock> findStocksList();
 
+    List<Stock> findStocksAfterId(Long id);
+
     Map<String, Stock> findStocksBySymbols(List<String> symbols);
 
 }

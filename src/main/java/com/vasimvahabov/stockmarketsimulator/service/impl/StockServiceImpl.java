@@ -62,6 +62,11 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
+    public List<Stock> findStocksAfterId(Long id) {
+        return Collections.unmodifiableList(stockRepository.findAllByIdGreaterThan(id));
+    }
+
+    @Override
     public Map<String, Stock> findStocksBySymbols(List<String> symbols) {
         return stockRepository.findAllBySymbolIn(symbols)
                 .stream()
