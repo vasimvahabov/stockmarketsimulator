@@ -100,7 +100,7 @@ public class QuoteSynchronizer implements ApplicationRunner {
         CompletableFuture<Void> sessionCompletionFuture = new CompletableFuture<>();
         List<String> batchSymbols = batchStocks.stream().map(Stock::getSymbol).toList();
 
-        Queue<ProducerRecord<String, QuoteWSResponse>> producerRecords = new ConcurrentLinkedQueue<>();
+        BlockingQueue<ProducerRecord<String, QuoteWSResponse>> producerRecords = new LinkedBlockingQueue<>(10_000);
         CompletableFuture<WebSocketSession> sessionFuture = wsClient
                 .execute(new QuoteWSHandler(
                                 kafkaProps.getTopics().quotesRaw().name(),

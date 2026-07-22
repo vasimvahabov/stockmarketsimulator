@@ -17,7 +17,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -31,7 +31,7 @@ public class QuoteWSHandler extends TextWebSocketHandler {
 
     ObjectMapper objectMapper;
 
-    Queue<ProducerRecord<String, QuoteWSResponse>> producerRecords;
+    BlockingQueue<ProducerRecord<String, QuoteWSResponse>> producerRecords;
 
     CompletableFuture<Void> sessionCompletionFuture;
 
