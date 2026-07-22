@@ -18,6 +18,11 @@ public class QuotePublishCheckpointServiceImpl implements QuotePublishCheckpoint
     QuotePublishCheckpointRepository checkpointRepository;
 
     @Override
+    public QuotePublishCheckpoint findByDataSource(Integer dataSource) {
+        return checkpointRepository.findByDataSource(dataSource);
+    }
+
+    @Override
     public void saveQuotePublishCheckpoint(QuotePublishCheckpoint checkpoint) {
         log.info("Saving {} quote publish checkpoint", checkpoint.getDataSource());
         checkpointRepository.save(checkpoint);

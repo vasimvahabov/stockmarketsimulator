@@ -6,4 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface QuotePublishCheckpointRepository extends JpaRepository<QuotePublishCheckpoint, String> {
+
+    QuotePublishCheckpoint findByDataSource(Integer dataSource);
+
 }
