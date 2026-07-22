@@ -97,37 +97,40 @@ public class QuoteSynchronizer implements ApplicationRunner {
     private void subscribeToQuotes(List<Stock> batchStocks,
                                    FinnhubProps.WebSocket finnhubWSProps,
                                    QuoteSynchronizerProps.WebSocket wsSyncProps) {
-        CompletableFuture<Void> sessionCompletionFuture = new CompletableFuture<>();
+        CompletableFuture<Void> sessionCloseFuture = new CompletableFuture<>();
         List<String> batchSymbols = batchStocks.stream().map(Stock::getSymbol).toList();
 
         BlockingQueue<ProducerRecord<String, QuoteWSResponse>> producerRecords = new LinkedBlockingQueue<>(10_000);
+
+        QuoteWSHandler wsHandler = QuoteWSHandler.builder()
+                .kafkaTopic(kafkaProps.getTopics().quotesRaw().name())
+                .batchSymbols(batchSymbols)
+                .objectMapper(objectMapper)
+                .producerRecords(producerRecords)
+                .sessionCloseFuture(sessionCloseFuture)
+                .build();
+
         CompletableFuture<WebSocketSession> sessionFuture = wsClient
-                .execute(new QuoteWSHandler(
-                                kafkaProps.getTopics().quotesRaw().name(),
-                                batchSymbols,
-                                objectMapper,
-                                producerRecords,
-                                sessionCompletionFuture
-                        ), buildWebSocketUri(finnhubWSProps)
-                ).orTimeout(finnhubWSProps.timeout(), finnhubWSProps.timeoutUnit());
+                .execute(wsHandler, buildWebSocketUri(finnhubWSProps))
+                .orTimeout(finnhubWSProps.timeout(), finnhubWSProps.timeoutUnit());
 
         sessionFuture.whenComplete(logFailureAndCompleteExceptionally(
-                log, "Failed to connect to Finnhub WebSocket server", sessionCompletionFuture
+                log, "Failed to connect to Finnhub WebSocket server", sessionCloseFuture
         ));
 
         sessionFuture.thenAcceptAsync(
-                wsSession -> closeSession(wsSession, sessionCompletionFuture),
+                wsSession -> closeSession(wsSession, sessionCloseFuture),
                 CompletableFuture.delayedExecutor(
                         wsSyncProps.sessionDuration(),
                         wsSyncProps.sessionUnit(),
                         scheduledExecutor
                 )
         ).whenComplete(logFailureAndCompleteExceptionally(
-                log, "Failed to schedule close session", sessionCompletionFuture
+                log, "Failed to schedule close session", sessionCloseFuture
         ));
 
         long closeTimeoutMs = wsSyncProps.sessionDurationInMillis() + wsSyncProps.closeGracePeriodInMillis();
-        sessionCompletionFuture
+        sessionCloseFuture
                 .orTimeout(closeTimeoutMs, TimeUnit.MILLISECONDS)
                 .whenComplete((_, throwable) -> {
                     if (throwable != null) {
@@ -158,11 +161,11 @@ public class QuoteSynchronizer implements ApplicationRunner {
                 .toUriString();
     }
 
-    private void closeSession(WebSocketSession wsSession, CompletableFuture<Void> connectionCloseFuture) {
+    private void closeSession(WebSocketSession wsSession, CompletableFuture<Void> sessionCloseFuture) {
         try {
             wsSession.close(CloseStatus.GOING_AWAY.withReason("Client disconnected from quote updates"));
         } catch (Exception exception) {
-            connectionCloseFuture.completeExceptionally(exception);
+            sessionCloseFuture.completeExceptionally(exception);
             log.error("Failed to close WebSocket session {}", exception.getMessage(), exception);
         }
     }

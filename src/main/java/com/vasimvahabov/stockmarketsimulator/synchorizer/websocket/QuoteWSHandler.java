@@ -4,6 +4,7 @@ import com.vasimvahabov.stockmarketsimulator.dto.request.QuoteWSRequest;
 import com.vasimvahabov.stockmarketsimulator.dto.response.QuoteWSResponse;
 import jakarta.annotation.Nonnull;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
+@Builder
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class QuoteWSHandler extends TextWebSocketHandler {
@@ -33,7 +35,7 @@ public class QuoteWSHandler extends TextWebSocketHandler {
 
     BlockingQueue<ProducerRecord<String, QuoteWSResponse>> producerRecords;
 
-    CompletableFuture<Void> sessionCompletionFuture;
+    CompletableFuture<Void> sessionCloseFuture;
 
     @Override
     public void handleTextMessage(@Nonnull WebSocketSession session,
@@ -83,7 +85,7 @@ public class QuoteWSHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(@Nonnull WebSocketSession session,
                                       @Nonnull CloseStatus status) {
         log.info("Finnhub WebSocket closed [code={}, reason={}]", status.getCode(), status.getReason());
-        sessionCompletionFuture.complete(null);
+        sessionCloseFuture.complete(null);
     }
 
 }
