@@ -24,11 +24,11 @@ public interface QuoteMapper {
             source = "data.symbol",
             qualifiedByName = "stockBySymbol"
     )
-    Quote wsResponseToEntity(QuoteWSResponse.Data data, @Context Map<String, Stock> stocksMap);
+    Quote wsResponseToEntity(QuoteWSResponse.Data data, @Context Map<String, Stock> stockMap);
 
     @Named("stockBySymbol")
-    default Stock stockBySymbol(String symbol, @Context Map<String, Stock> stocksMap) {
-        return stocksMap.get(symbol);
+    default Stock stockBySymbol(String symbol, @Context Map<String, Stock> stockMap) {
+        return stockMap.get(symbol);
     }
 
     @Named("millisToInstant")
