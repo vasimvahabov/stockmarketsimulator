@@ -34,7 +34,8 @@ public class QuoteKafkaConsumer {
             quoteService.createQuotes(records);
             log.info("Successfully processed consumed {} records", records.size());
         } catch (Exception exception) {
-            log.error("Failed to process consumed {} records", records.size());
+            log.error("Failed to process consumed records: {}", exception.getMessage(), exception);
+            throw exception;
         }
     }
 
