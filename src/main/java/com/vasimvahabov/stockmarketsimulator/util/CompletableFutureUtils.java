@@ -1,11 +1,14 @@
 package com.vasimvahabov.stockmarketsimulator.util;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class CompletableFutureUtils {
 
     public static <T> BiConsumer<T, Throwable> logFailure(Logger log, String message) {
