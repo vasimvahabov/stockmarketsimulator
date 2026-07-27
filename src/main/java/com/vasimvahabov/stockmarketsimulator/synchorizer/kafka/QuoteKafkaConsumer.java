@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+import static com.vasimvahabov.stockmarketsimulator.constant.KafkaConstants.*;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -24,8 +26,8 @@ public class QuoteKafkaConsumer {
             clientIdPrefix = "${kafka.topics.quotes-raw.consumer.client-id-prefix}",
             groupId = "${kafka.topics.quotes-raw.consumer.group-id}",
             topics = "${kafka.topics.quotes-raw.name}",
-            batch = "true",
-            ackMode = "BATCH",
+            batch = BATCH_ENABLED,
+            ackMode = ACK_MODE_BATCH,
             concurrency = "${kafka.topics.quotes-raw.partitions}"
     )
     public void consume(List<ConsumerRecord<String, QuoteWSResponse>> records) {
