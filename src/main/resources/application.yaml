@@ -19,6 +19,7 @@ spring:
 
 
 kafka:
+  dlt-suffix: "${DLT_SUFFIX:-dlt}"
   topics:
     quotes-raw:
       name: "${TOPIC_QUOTES_RAW_NAME:quotes-raw}"

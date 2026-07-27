@@ -17,7 +17,7 @@ public class KafkaConfig {
 
     @Bean
     NewTopic quotesRawTopic(KafkaProps kafkaProps) {
-        KafkaTopicProp topicProp = kafkaProps.getTopics().quotesRaw();
+        KafkaTopicProp topicProp = kafkaProps.topics().quotesRaw();
         return TopicBuilder.name(topicProp.name())
                 .replicas(topicProp.replicas())
                 .partitions(topicProp.partitions())

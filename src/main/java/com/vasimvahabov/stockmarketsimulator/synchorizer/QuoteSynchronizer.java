@@ -110,7 +110,7 @@ public class QuoteSynchronizer implements ApplicationRunner {
         BlockingQueue<ProducerRecord<String, QuoteWSResponse>> producerRecords = new LinkedBlockingQueue<>(10_000);
 
         QuoteWSHandler wsHandler = QuoteWSHandler.builder()
-                .kafkaTopic(kafkaProps.getTopics().quotesRaw().name())
+                .kafkaTopic(kafkaProps.topics().quotesRaw().name())
                 .batchSymbols(batchSymbols)
                 .objectMapper(objectMapper)
                 .producerRecords(producerRecords)
