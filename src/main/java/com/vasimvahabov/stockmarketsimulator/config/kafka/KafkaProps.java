@@ -7,23 +7,33 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "kafka")
 public record KafkaProps(
         @Nonnull String dltSuffix,
-        @NotNull KafkaTopicProps topics
+        @Nonnull BackoffProps backoff,
+        @NotNull TopicProps topics
 ) {
 
-    public record KafkaTopicProps(
-            @Nonnull KafkaTopicProp quotesRaw
+
+    public record BackoffProps(
+            int maxRetries,
+            long initialIntervalMs,
+            long multiplier,
+            long maxIntervalMs
     ) {
     }
 
-    public record KafkaTopicProp(
+    public record TopicProps(
+            @Nonnull TopicProp quotesRaw
+    ) {
+    }
+
+    public record TopicProp(
             @Nonnull String name,
             int partitions,
             int replicas,
-            @NotNull KafkaConsumerProp consumer
+            @NotNull ConsumerProp consumer
     ) {
     }
 
-    public record KafkaConsumerProp(
+    public record ConsumerProp(
             @Nonnull String groupId,
             @Nonnull String clientIdPrefix
     ) {

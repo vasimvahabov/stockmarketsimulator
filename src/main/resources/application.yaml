@@ -19,15 +19,20 @@ spring:
 
 
 kafka:
-  dlt-suffix: "${DLT_SUFFIX:-dlt}"
+  dlt-suffix: "${KAFKA_DLT_SUFFIX:-dlt}"
+  backoff:
+    max-retries: "${KAFKA_BACKOFF_MAX_RETRIES:10}"
+    initial-interval-ms: "${KAFKA_BACKOFF_INITIAL_INTERVAL_MS:1000}"
+    multiplier: "${KAFKA_BACKOFF_MAX_INTERVAL_MS:2}"
+    max-interval-ms: "${KAFKA_BACKOFF_MAX_INTERVAL_MS:10000}"
   topics:
     quotes-raw:
-      name: "${TOPIC_QUOTES_RAW_NAME:quotes-raw}"
-      partitions: "${TOPIC_QUOTES_RAW_PARTITIONS:3}"
-      replicas: "${TOPIC_QUOTES_RAW_REPLICAS:1}"
+      name: "${KAFKA_TOPIC_QUOTES_RAW_NAME:quotes-raw}"
+      partitions: "${KAFKA_TOPIC_QUOTES_RAW_PARTITIONS:3}"
+      replicas: "${KAFKA_TOPIC_QUOTES_RAW_REPLICAS:1}"
       consumer:
-        group-id: "${TOPIC_QUOTES_RAW_CONSUMER_GROUP_ID:quote-raw-consumer-group}"
-        client-id-prefix: "${TOPIC_QUOTES_RAW_CLIENT_ID_PREFIX:quote-raw-consumer-client}"
+        group-id: "${KAFKA_TOPIC_QUOTES_RAW_CONSUMER_GROUP_ID:quote-raw-consumer-group}"
+        client-id-prefix: "${KAFKA_TOPIC_QUOTES_RAW_CLIENT_ID_PREFIX:quote-raw-consumer-client}"
 
 finnhub:
   api-key: "${FINNHUB_API_KEY}"

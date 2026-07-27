@@ -5,7 +5,7 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import com.vasimvahabov.stockmarketsimulator.config.kafka.KafkaProps.KafkaTopicProp;
+import com.vasimvahabov.stockmarketsimulator.config.kafka.KafkaProps.TopicProp;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.listener.ConsumerRecordRecoverer;
@@ -20,7 +20,7 @@ public class KafkaConfig {
 
     @Bean
     NewTopic quotesRawTopic(KafkaProps kafkaProps) {
-        KafkaTopicProp topicProp = kafkaProps.topics().quotesRaw();
+        TopicProp topicProp = kafkaProps.topics().quotesRaw();
         return TopicBuilder.name(topicProp.name())
                 .replicas(topicProp.replicas())
                 .partitions(topicProp.partitions())
@@ -29,10 +29,11 @@ public class KafkaConfig {
 
     @Bean
     DefaultErrorHandler defaultErrorHandler(KafkaTemplate<Object, Object> kafkaTemplate, KafkaProps kafkaProps) {
-        ExponentialBackOff backOff = new ExponentialBackOffWithMaxRetries(10);
-        backOff.setInitialInterval(1_000);
-        backOff.setMultiplier(2);
-        backOff.setMaxInterval(10_000);
+        KafkaProps.BackoffProps backoffProps = kafkaProps.backoff();
+        ExponentialBackOff backOff = new ExponentialBackOffWithMaxRetries(backoffProps.maxRetries());
+        backOff.setInitialInterval(backoffProps.initialIntervalMs());
+        backOff.setMultiplier(backoffProps.multiplier());
+        backOff.setMaxInterval(backoffProps.maxIntervalMs());
 
         ConsumerRecordRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate, (record, exception) -> {
             log.error(
