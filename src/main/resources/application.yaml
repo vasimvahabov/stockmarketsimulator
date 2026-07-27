@@ -33,6 +33,7 @@ kafka:
       consumer:
         group-id: "${KAFKA_TOPIC_QUOTES_RAW_CONSUMER_GROUP_ID:quote-raw-consumer-group}"
         client-id-prefix: "${KAFKA_TOPIC_QUOTES_RAW_CLIENT_ID_PREFIX:quote-raw-consumer-client}"
+        concurrency: "${KAFKA_TOPIC_QUOTES_RAW_CONCURRENCY:3}"
 
 finnhub:
   api-key: "${FINNHUB_API_KEY}"
