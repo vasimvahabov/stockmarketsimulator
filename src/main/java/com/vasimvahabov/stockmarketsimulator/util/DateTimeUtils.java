@@ -11,7 +11,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class DateTimeUtils {
+public final class DateTimeUtils {
 
     public static long millisUntilMidnightUTC() {
         ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
