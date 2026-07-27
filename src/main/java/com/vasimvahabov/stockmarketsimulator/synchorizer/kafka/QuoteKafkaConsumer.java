@@ -30,13 +30,41 @@ public class QuoteKafkaConsumer {
             ackMode = ACK_MODE_BATCH,
             concurrency = "${kafka.topics.quotes-raw.consumer.concurrency}"
     )
-    public void consume(List<ConsumerRecord<String, QuoteWSResponse>> records) {
+    public void consumeRawQuotes(List<ConsumerRecord<String, QuoteWSResponse>> records) {
+        int recordsSize = records.size();
+        String topic = records.getFirst().topic();
+        int partition = records.getFirst().partition();
+        long firstOffset = records.getFirst().offset();
+        long lastOffset = records.getLast().offset();
         try {
-            log.info("Consuming {} records", records.size());
+            log.info(
+                    "Consuming {} records - Topic: {}, Partition: {}, Offset Range: {} to {}",
+                    recordsSize,
+                    topic,
+                    partition,
+                    firstOffset,
+                    lastOffset
+            );
+
             quoteService.createQuotes(records);
-            log.info("Successfully processed consumed {} records", records.size());
+            log.info(
+                    "Successfully consumed {} records - Topic: {}, Partition: {}, Offset Range: {} to {}",
+                    recordsSize,
+                    topic,
+                    partition,
+                    firstOffset,
+                    lastOffset
+            );
         } catch (Exception exception) {
-            log.error("Failed to process consumed records: {}", exception.getMessage(), exception);
+            log.error(
+                    "Failed to consume {} records - First record - Topic: {}, Partition: {}, Offset Range: {} to {}",
+                    recordsSize,
+                    topic,
+                    partition,
+                    firstOffset,
+                    lastOffset,
+                    exception
+            );
             throw exception;
         }
     }
