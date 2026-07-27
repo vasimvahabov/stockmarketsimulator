@@ -28,7 +28,7 @@ public class QuoteKafkaConsumer {
             topics = "${kafka.topics.quotes-raw.name}",
             batch = BATCH_ENABLED,
             ackMode = ACK_MODE_BATCH,
-            concurrency = "${kafka.topics.quotes-raw.partitions}"
+            concurrency = "${kafka.topics.quotes-raw.consumer.concurrency}"
     )
     public void consume(List<ConsumerRecord<String, QuoteWSResponse>> records) {
         try {
