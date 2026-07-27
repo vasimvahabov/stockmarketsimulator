@@ -36,37 +36,24 @@ public class QuoteKafkaConsumer {
         int partition = records.getFirst().partition();
         long firstOffset = records.getFirst().offset();
         long lastOffset = records.getLast().offset();
-        try {
-            log.info(
-                    "Consuming {} records - Topic: {}, Partition: {}, Offset Range: {} to {}",
-                    recordsSize,
-                    topic,
-                    partition,
-                    firstOffset,
-                    lastOffset
-            );
+        log.info(
+                "Consuming {} records - Topic: {}, Partition: {}, Offset Range: {} to {}",
+                recordsSize,
+                topic,
+                partition,
+                firstOffset,
+                lastOffset
+        );
 
-            quoteService.createQuotes(records);
-            log.info(
-                    "Successfully consumed {} records - Topic: {}, Partition: {}, Offset Range: {} to {}",
-                    recordsSize,
-                    topic,
-                    partition,
-                    firstOffset,
-                    lastOffset
-            );
-        } catch (Exception exception) {
-            log.error(
-                    "Failed to consume {} records - First record - Topic: {}, Partition: {}, Offset Range: {} to {}",
-                    recordsSize,
-                    topic,
-                    partition,
-                    firstOffset,
-                    lastOffset,
-                    exception
-            );
-            throw exception;
-        }
+        quoteService.createQuotes(records);
+        log.info(
+                "Successfully consumed {} records - Topic: {}, Partition: {}, Offset Range: {} to {}",
+                recordsSize,
+                topic,
+                partition,
+                firstOffset,
+                lastOffset
+        );
     }
 
 }
